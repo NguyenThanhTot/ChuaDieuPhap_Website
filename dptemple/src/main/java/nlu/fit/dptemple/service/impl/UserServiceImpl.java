@@ -1,6 +1,8 @@
 package nlu.fit.dptemple.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import nlu.fit.dptemple.dto.LoginRequest;
+import nlu.fit.dptemple.dto.LoginResponse;
 import nlu.fit.dptemple.dto.UserRequest;
 import nlu.fit.dptemple.dto.UserResponse;
 import nlu.fit.dptemple.entity.User;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -96,5 +99,38 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LoginResponse authenticate(LoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", request.getEmail()));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new ResourceNotFoundException("User", "credentials", "Invalid email or password");
+        }
+
+        if (Boolean.FALSE.equals(user.getIsActive())) {
+            throw new ResourceNotFoundException("User", "status", "Account is inactive");
+        }
+
+        if (user.getDeletedAt() != null) {
+            throw new ResourceNotFoundException("User", "status", "Account has been deleted");
+        }
+
+        // Generate a simple token (in production, use JWT)
+        String token = UUID.randomUUID().toString();
+
+        return LoginResponse.builder()
+                .token(token)
+                .id(user.getId())
+                .fullName(user.getFullName())
+                .dharmaName(user.getDharmaName())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .avatarUrl(user.getAvatarUrl())
+                .loginTime(LocalDateTime.now())
+                .build();
     }
 }

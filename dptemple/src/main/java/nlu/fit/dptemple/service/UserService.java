@@ -1,5 +1,7 @@
 package nlu.fit.dptemple.service;
 
+import nlu.fit.dptemple.dto.LoginRequest;
+import nlu.fit.dptemple.dto.LoginResponse;
 import nlu.fit.dptemple.dto.UserRequest;
 import nlu.fit.dptemple.dto.UserResponse;
 import org.springframework.data.domain.Page;
@@ -22,4 +24,6 @@ public interface UserService {
     Page<UserResponse> findAllDeleted(Pageable pageable);
 
     boolean existsByEmail(String email);
+
+    LoginResponse authenticate(LoginRequest request);
 }
