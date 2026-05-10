@@ -14,6 +14,6 @@ public class JpaConfig {
 
     @Bean
     public AuditorAware<User> auditorAware() {
-        return () -> Optional.empty();
+        return Optional::empty;
     }
 }
