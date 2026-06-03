@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import AdminHeader from '@/components/layout/AdminHeader'
 import AdminNavbar from '@/components/layout/AdminNavbar'
+import { useToast } from '@/components/common/Toast'
 
 interface TagFormData {
   name: string
@@ -41,6 +42,7 @@ export default function CreateTag() {
 
   const [errors, setErrors] = useState<Partial<TagFormData>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { success, error } = useToast()
 
   const generateSlug = (name: string) => {
     return name
@@ -104,15 +106,12 @@ export default function CreateTag() {
     setIsSubmitting(true)
 
     try {
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      console.log('Creating tag:', formData)
-      
-      // Navigate back to tags list
+      success('Đã tạo tag mới thành công')
       navigate('/admin/tags')
-    } catch (error) {
-      console.error('Error creating tag:', error)
+    } catch (submitError) {
+      console.error('Error creating tag:', submitError)
+      error('Tạo tag thất bại, vui lòng thử lại')
     } finally {
       setIsSubmitting(false)
     }

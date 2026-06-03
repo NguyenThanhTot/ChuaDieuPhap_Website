@@ -89,7 +89,16 @@ const createAdminUser = async () => {
     avatarUrl: '',
     isActive: true,
   }
-  return postWithRetry('/users', body)
+  try {
+    return await postWithRetry('/users', body)
+  } catch (error) {
+    // If admin user already exists, skip and continue seeding
+    if (error?.response && error.response.status === 409) {
+      log('Admin user already exists, skipping creation')
+      return error.response.data
+    }
+    throw error
+  }
 }
 
 const createSocialLinks = async () => {

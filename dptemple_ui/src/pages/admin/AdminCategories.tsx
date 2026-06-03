@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import AdminHeader from '@/components/layout/AdminHeader'
 import AdminNavbar from '@/components/layout/AdminNavbar'
+import QuickEditModal from '@/components/common/QuickEditModal'
+import { useToast } from '@/components/common/Toast'
 
 interface CategoryItem {
   id: number
@@ -18,8 +20,9 @@ interface CategoryItem {
 export default function AdminCategories() {
   useDocumentTitle('Quản lý Loại tin tức - Admin')
   const navigate = useNavigate()
+  const { success, warning } = useToast()
 
-  const [categories] = useState<CategoryItem[]>([
+  const [categories, setCategories] = useState<CategoryItem[]>([
     {
       id: 1,
       name: 'Thông báo chung',
@@ -84,6 +87,8 @@ export default function AdminCategories() {
 
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [editItem, setEditItem] = useState<CategoryItem | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
   const filteredCategories = categories.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -118,22 +123,34 @@ export default function AdminCategories() {
     })
   }
 
+  const handleClearFilters = () => {
+    setSearchTerm('')
+    setFilterStatus('all')
+  }
+
   const handleEditClick = (category: CategoryItem) => {
-    console.log('Edit category:', category)
-    // Navigate to edit page or open modal
+    setEditItem(category)
+    setIsEditModalOpen(true)
+  }
+
+  const handleSaveCategory = (updatedCategory: CategoryItem) => {
+    setCategories((prev) => prev.map((item) => item.id === updatedCategory.id ? updatedCategory : item))
+    setIsEditModalOpen(false)
+    success('Đã cập nhật loại tin tức thành công')
   }
 
   const handleStatusToggle = (id: number, currentStatus: CategoryItem['status']) => {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active'
-    console.log('Toggle status:', id, newStatus)
-    // Update status via API
+    setCategories((prev) => prev.map((item) => item.id === id ? { ...item, status: newStatus } : item))
+    success(`Đã chuyển trạng thái sang ${newStatus === 'active' ? 'Hoạt động' : 'Không hoạt động'}`)
   }
 
   const handleDeleteClick = (id: number) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa loại tin tức này?')) {
-      console.log('Delete category:', id)
-      // Delete via API
+    if (!window.confirm('Bạn có chắc chắn muốn xóa loại tin tức này?')) {
+      return
     }
+    setCategories((prev) => prev.filter((category) => category.id !== id))
+    warning('Đã xóa loại tin tức')
   }
 
   return (
@@ -193,7 +210,10 @@ export default function AdminCategories() {
                     <option value="active">Hoạt động</option>
                     <option value="inactive">Không hoạt động</option>
                   </select>
-                  <button className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                  <button
+                    onClick={handleClearFilters}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
@@ -258,7 +278,7 @@ export default function AdminCategories() {
                             className={category.status === 'active' ? "text-yellow-600 hover:text-yellow-900" : "text-green-600 hover:text-green-900"}
                             title={category.status === 'active' ? "Tắt hoạt động" : "Bật hoạt động"}
                           >
-                            {category.status === 'active' ? "🔒" : "🔓"}
+                            {category.status === 'active' ? '🔒' : '🔓'}
                           </button>
                           <button
                             onClick={() => handleDeleteClick(category.id)}
@@ -330,6 +350,13 @@ export default function AdminCategories() {
           </div>
         </div>
       </div>
+      <QuickEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        item={editItem}
+        itemType="category"
+        onSave={handleSaveCategory}
+      />
     </div>
   )
 }

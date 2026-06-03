@@ -1,13 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import AdminHeader from '@/components/layout/AdminHeader'
 import AdminNavbar from '@/components/layout/AdminNavbar'
 import ConfirmDialog from '@/components/common/ConfirmDialog'
 import ContactDetailModal from '@/components/common/ContactDetailModal'
 import { useToast } from '@/components/common/Toast'
+import { messageService } from '@/services/messageService'
+import type { Message } from '@/types'
 
 interface ContactItem {
-  id: number
+  id: string
   fullName: string
   email: string
   phone: string
@@ -19,62 +21,52 @@ interface ContactItem {
 
 export default function AdminContact() {
   useDocumentTitle('Quản lý Liên hệ - Admin')
-  const { success } = useToast()
+  const { success, error } = useToast()
 
-  const [contacts] = useState<ContactItem[]>([
-    {
-      id: 1,
-      fullName: 'Nguyễn Văn A',
-      email: 'nguyenvana@email.com',
-      phone: '0901234567',
-      message: 'Tôi muốn tìm hiểu về khóa tu mùa hè sắp tới. Xin cho tôi biết thông tin chi tiết.',
-      status: 'new',
-      createdAt: '2026-05-09 09:30'
-    },
-    {
-      id: 2,
-      fullName: 'Trần Thị B',
-      email: 'tranthib@email.com',
-      phone: '0912345678',
-      message: 'Chùa có tổ chức lễ Vu Lan báo hiếu không ạ? Tôi muốn đăng ký tham gia.',
-      status: 'read',
-      createdAt: '2026-05-08 14:20'
-    },
-    {
-      id: 3,
-      fullName: 'Lê Văn C',
-      email: 'levanc@email.com',
-      phone: '0923456789',
-      message: 'Tôi muốn quy y tam bảo, thủ tục cần những gì ạ?',
-      status: 'replied',
-      createdAt: '2026-05-07 10:15',
-      repliedAt: '2026-05-07 16:45'
-    },
-    {
-      id: 4,
-      fullName: 'Phạm Thị D',
-      email: 'phamthid@email.com',
-      phone: '0934567890',
-      message: 'Xin chào, tôi muốn hỏi về các hoạt động từ thiện của chùa.',
-      status: 'archived',
-      createdAt: '2026-05-06 11:25'
-    },
-    {
-      id: 5,
-      fullName: 'Hoàng Văn E',
-      email: 'hoangvane@email.com',
-      phone: '0945678901',
-      message: 'Tôi là phật tử mới, muốn tìm hiểu thêm về Phật giáo. Chùa có lớp học nào không?',
-      status: 'new',
-      createdAt: '2026-05-05 16:40'
-    }
-  ])
-
+  const [contacts, setContacts] = useState<ContactItem[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [selectedContact, setSelectedContact] = useState<ContactItem | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null })
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: string | null }>({ isOpen: false, id: null })
+
+  const mapMessageToContact = (message: Message): ContactItem => ({
+    id: message.id,
+    fullName: message.senderName,
+    email: message.senderEmail,
+    phone: message.senderPhone ?? '',
+    message: message.content,
+    status: message.isRead ? 'read' : 'new',
+    createdAt: message.createdAt
+  })
+
+  useEffect(() => {
+    const loadMessages = async () => {
+      setLoading(true)
+      try {
+        const [unreadResponse, readResponse] = await Promise.all([
+          messageService.findAllUnread({ page: 0, size: 50 }),
+          messageService.findAllRead({ page: 0, size: 50 })
+        ])
+
+        const allMessages = [
+          ...unreadResponse.data.content.map(mapMessageToContact),
+          ...readResponse.data.content.map(mapMessageToContact)
+        ]
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+        setContacts(allMessages)
+      } catch (fetchError) {
+        console.error('Failed to load contact messages:', fetchError)
+        error('Không thể tải dữ liệu liên hệ. Vui lòng thử lại.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadMessages()
+  }, [])
 
   const filteredContacts = contacts.filter(item => {
     const matchesSearch = item.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -120,29 +112,74 @@ export default function AdminContact() {
     setIsDetailModalOpen(true)
   }
 
-  const handleStatusChange = (id: number, newStatus: ContactItem['status']) => {
-    // Here you would update the status via API
-    console.log('Update status:', id, newStatus)
-    success(`Đã cập nhật trạng thái thành ${newStatus === 'new' ? 'Mới' : newStatus === 'read' ? 'Đã đọc' : newStatus === 'replied' ? 'Đã trả lời' : 'Lưu trữ'}`)
+  const handleStatusChange = async (id: string, newStatus: ContactItem['status']) => {
+    const contact = contacts.find(item => item.id === id)
+    if (!contact) return
+
+    try {
+      if (newStatus === 'read' && contact.status !== 'read') {
+        await messageService.markAsRead(id)
+        setContacts((prev) => prev.map((item) => item.id === id ? { ...item, status: 'read' } : item))
+        success('Đã đánh dấu là đã đọc')
+        return
+      }
+
+      if (newStatus === 'replied') {
+        if (contact.status !== 'read') {
+          await messageService.markAsRead(id)
+        }
+        setContacts((prev) => prev.map((item) => item.id === id ? { ...item, status: 'replied', repliedAt: new Date().toISOString() } : item))
+        success('Đã đánh dấu là đã trả lời')
+        return
+      }
+
+      if (newStatus === 'archived') {
+        setContacts((prev) => prev.map((item) => item.id === id ? { ...item, status: 'archived' } : item))
+        success('Đã lưu trữ tin nhắn')
+      }
+    } catch (statusError) {
+      console.error('Failed to update contact status:', statusError)
+      error('Không thể cập nhật trạng thái tin nhắn. Vui lòng thử lại.')
+    }
   }
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     setDeleteConfirm({ isOpen: true, id })
   }
 
-  const confirmDelete = () => {
-    if (deleteConfirm.id) {
-      // Here you would delete via API
-      console.log('Delete contact:', deleteConfirm.id)
+  const confirmDelete = async () => {
+    if (!deleteConfirm.id) {
+      setDeleteConfirm({ isOpen: false, id: null })
+      return
+    }
+
+    try {
+      await messageService.delete(deleteConfirm.id)
+      setContacts((prev) => prev.filter((item) => item.id !== deleteConfirm.id))
       success('Đã xóa tin nhắn liên hệ thành công')
+    } catch (deleteError) {
+      console.error('Failed to delete contact message:', deleteError)
+      error('Không thể xóa tin nhắn. Vui lòng thử lại.')
+    } finally {
       setDeleteConfirm({ isOpen: false, id: null })
     }
   }
 
-  const handleReply = (contact: ContactItem) => {
-    // Here you would open reply form or navigate
-    console.log('Reply to contact:', contact)
+  const handleReply = async (contact: ContactItem) => {
+    try {
+      if (contact.status !== 'read') {
+        await messageService.markAsRead(contact.id)
+      }
+    } catch (markError) {
+      console.error('Failed to mark contact as read:', markError)
+    }
+
+    setContacts((prev) => prev.map((item) => item.id === contact.id ? { ...item, status: 'replied', repliedAt: new Date().toISOString() } : item))
     success('Đã mở form trả lời')
+  }
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Đang tải...</div>
   }
 
   return (

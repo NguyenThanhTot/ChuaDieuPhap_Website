@@ -19,7 +19,7 @@ export default function AdminVideos() {
   useDocumentTitle('Quản lý Video - Admin')
   const navigate = useNavigate()
 
-  const [videos] = useState<VideoItem[]>([
+  const [videos, setVideos] = useState<VideoItem[]>([
     {
       id: 1,
       title: 'Lễ Phật Đản 2026 tại Chùa Diệu Pháp',
@@ -63,6 +63,26 @@ export default function AdminVideos() {
   ])
 
   const [searchTerm, setSearchTerm] = useState('')
+
+  const handleClearFilters = () => setSearchTerm('')
+
+  const handleViewVideo = (video: VideoItem) => {
+    window.open(video.youtubeUrl, '_blank', 'noopener noreferrer')
+  }
+
+  const handleEditVideo = (video: VideoItem) => {
+    const newTitle = window.prompt('Nhập tiêu đề mới', video.title)
+    if (!newTitle) return
+    const newUrl = window.prompt('Nhập URL YouTube mới', video.youtubeUrl)
+    if (!newUrl) return
+
+    setVideos((prev) => prev.map((item) => item.id === video.id ? { ...item, title: newTitle, youtubeUrl: newUrl } : item))
+  }
+
+  const handleDeleteVideo = (id: number) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa video này?')) return
+    setVideos((prev) => prev.filter((item) => item.id !== id))
+  }
 
   const filteredVideos = videos.filter(video => {
     const matchesSearch = video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -149,7 +169,10 @@ export default function AdminVideos() {
                     </svg>
                     Bộ lọc
                   </button>
-                  <button className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                  <button
+                    onClick={handleClearFilters}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
@@ -212,9 +235,27 @@ export default function AdminVideos() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <div className="flex gap-2">
-                          <button className="text-blue-600 hover:text-blue-900">👁️</button>
-                          <button className="text-green-600 hover:text-green-900">✏️</button>
-                          <button className="text-red-600 hover:text-red-900">🗑️</button>
+                                  <button
+                            onClick={() => handleViewVideo(video)}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="Xem video"
+                          >
+                            👁️
+                          </button>
+                          <button
+                            onClick={() => handleEditVideo(video)}
+                            className="text-green-600 hover:text-green-900"
+                            title="Chỉnh sửa video"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => handleDeleteVideo(video.id)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Xóa video"
+                          >
+                            🗑️
+                          </button>
                         </div>
                       </td>
                     </tr>

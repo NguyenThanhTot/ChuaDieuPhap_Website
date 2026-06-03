@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import AdminHeader from '@/components/layout/AdminHeader'
 import AdminNavbar from '@/components/layout/AdminNavbar'
+import { useToast } from '@/components/common/Toast'
 
 interface VideoFormData {
   isActive: boolean
@@ -21,6 +22,7 @@ export default function CreateVideo() {
   })
 
   const [errors, setErrors] = useState<Partial<VideoFormData>>({})
+  const { success, error } = useToast()
 
   const handleInputChange = (field: keyof VideoFormData, value: any) => {
     setFormData(prev => ({
@@ -55,18 +57,19 @@ export default function CreateVideo() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (validateForm()) {
-      // Here you would normally send the data to your API
-      console.log('Creating video:', formData)
-      
-      // Show success message (you could use a toast library here)
-      alert('Thêm video thành công!')
-      
-      // Navigate back to videos list
-      navigate('/admin/videos')
+      try {
+        // Here you would normally send the data to your API
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        success('Thêm video thành công')
+        navigate('/admin/videos')
+      } catch (submitError) {
+        console.error('Error creating video:', submitError)
+        error('Thêm video thất bại, vui lòng thử lại')
+      }
     }
   }
 

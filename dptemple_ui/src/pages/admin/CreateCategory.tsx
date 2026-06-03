@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import AdminHeader from '@/components/layout/AdminHeader'
 import AdminNavbar from '@/components/layout/AdminNavbar'
+import { useToast } from '@/components/common/Toast'
 
 interface CategoryFormData {
   name: string
@@ -24,6 +25,7 @@ export default function CreateCategory() {
 
   const [errors, setErrors] = useState<Partial<CategoryFormData>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { success, error } = useToast()
 
   const generateSlug = (name: string) => {
     return name
@@ -87,15 +89,12 @@ export default function CreateCategory() {
     setIsSubmitting(true)
 
     try {
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      console.log('Creating category:', formData)
-      
-      // Navigate back to categories list
+      success('Đã tạo loại tin tức mới thành công')
       navigate('/admin/categories')
-    } catch (error) {
-      console.error('Error creating category:', error)
+    } catch (submitError) {
+      console.error('Error creating category:', submitError)
+      error('Tạo loại tin tức thất bại, vui lòng thử lại')
     } finally {
       setIsSubmitting(false)
     }
