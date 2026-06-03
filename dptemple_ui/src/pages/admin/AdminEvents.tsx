@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuth } from '@/contexts/AuthContext'
@@ -15,31 +15,53 @@ export default function AdminEvents() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
+
+  const searchInputRef = useRef<HTMLInputElement | null>(null)
+
+  const loadEvents = async (pageIndex = page, size = pageSize) => {
+    try {
+      setLoading(true)
+      const response = await eventService.findAllPublished({ page: pageIndex, size, sort: ['startDate,asc'] })
+      setEvents(response.data.content)
+      setTotalItems(response.data.totalElements || 0)
+      setTotalPages(response.data.totalPages || 1)
+    } catch (error) {
+      console.error('Failed to load events:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const loadEvents = async () => {
-      try {
-        setLoading(true)
-        const response = await eventService.findAllPublished({ page: 0, size: 20, sort: ['startDate,asc'] })
-        setEvents(response.data.content)
-      } catch (error) {
-        console.error('Failed to load events:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadEvents()
-  }, [])
+    loadEvents(page, pageSize)
+  }, [page, pageSize])
 
   const handleDeleteEvent = async (id: string) => {
     if (!user) return
     try {
       await eventService.delete(id, user.id)
       setEvents((prev) => prev.filter((item) => item.id !== id))
+      setTotalItems((prev) => Math.max(0, prev - 1))
     } catch (error) {
       console.error('Failed to delete event:', error)
     }
+  }
+
+  const handleFilterFocus = () => {
+    searchInputRef.current?.focus()
+  }
+
+  const handleClearFilters = () => {
+    setSearchTerm('')
+  }
+
+  const handlePageSizeChange = (value: number) => {
+    setPageSize(value)
+    setPage(0)
   }
 
   const filteredEvents = events.filter((event) => {
@@ -101,6 +123,7 @@ export default function AdminEvents() {
                     </svg>
                   </div>
                   <input
+                    ref={searchInputRef}
                     type="text"
                     placeholder="Tìm kiếm tiêu đề, địa điểm..."
                     value={searchTerm}
@@ -109,13 +132,13 @@ export default function AdminEvents() {
                   />
                 </div>
                 <div className="flex gap-2">
-                  <button className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                  <button onClick={handleFilterFocus} className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                     </svg>
                     Bộ lọc
                   </button>
-                  <button className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                  <button onClick={handleClearFilters} className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
@@ -174,7 +197,7 @@ export default function AdminEvents() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <div className="flex items-center gap-3">
-                          <button onClick={() => navigate(`/admin/events/edit/${event.id}`)} className="text-blue-600 hover:text-blue-800">👁️</button>
+                          <button onClick={() => navigate(`/events/${event.id}`)} className="text-blue-600 hover:text-blue-800">👁️</button>
                           <button onClick={() => navigate(`/admin/events/edit/${event.id}`)} className="text-green-600 hover:text-green-800">✏️</button>
                           <button onClick={() => handleDeleteEvent(event.id)} className="text-red-600 hover:text-red-800">🗑️</button>
                         </div>
@@ -186,20 +209,34 @@ export default function AdminEvents() {
             </div>
 
             {/* Pagination */}
-            <div className="px-6 py-4 border-t flex items-center justify-between">
+            <div className="px-6 py-4 border-t flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="text-sm text-gray-700">
-                Hiển thị 1 đến {filteredEvents.length} của {events.length} kết quả
+                Hiển thị {filteredEvents.length} trong {totalItems} kết quả
               </div>
-              <div className="flex items-center gap-2">
-                <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">←</button>
-                <button className="px-3 py-1 bg-green-600 text-white rounded">1</button>
-                <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">2</button>
-                <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">3</button>
-                <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">→</button>
-                <select className="ml-4 px-3 py-1 border border-gray-300 rounded">
-                  <option>10 / page</option>
-                  <option>25 / page</option>
-                  <option>50 / page</option>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setPage(Math.max(0, page - 1))}
+                  disabled={page === 0}
+                  className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ←
+                </button>
+                <span className="px-3 py-1 border border-gray-300 rounded bg-white text-gray-700">{page + 1}</span>
+                <button
+                  onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
+                  disabled={page >= totalPages - 1}
+                  className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  →
+                </button>
+                <select
+                  value={pageSize}
+                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                  className="ml-4 px-3 py-1 border border-gray-300 rounded"
+                >
+                  <option value={10}>10 / page</option>
+                  <option value={20}>20 / page</option>
+                  <option value={50}>50 / page</option>
                 </select>
               </div>
             </div>

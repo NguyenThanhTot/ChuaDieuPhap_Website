@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import AdminHeader from '@/components/layout/AdminHeader'
 import AdminNavbar from '@/components/layout/AdminNavbar'
+import { useToast } from '@/components/common/Toast'
+import { newsService } from '@/services/newsService'
 
 interface NewsFormData {
   isActive: boolean
@@ -19,6 +21,7 @@ interface NewsFormData {
 export default function CreateNews() {
   useDocumentTitle('Tạo tin tức - Admin')
   const navigate = useNavigate()
+  const { success, error } = useToast()
 
   const [formData, setFormData] = useState<NewsFormData>({
     isActive: true,
@@ -33,6 +36,7 @@ export default function CreateNews() {
   })
 
   const [errors, setErrors] = useState<Partial<Omit<NewsFormData, 'imageFile'> & { imageFile: string }>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleInputChange = (field: keyof NewsFormData, value: any) => {
     setFormData(prev => ({
@@ -69,18 +73,32 @@ export default function CreateNews() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (validateForm()) {
-      // Here you would normally send the data to your API
-      console.log('Creating news:', formData)
-      
-      // Show success message (you could use a toast library here)
-      alert('Tạo tin tức thành công!')
-      
-      // Navigate back to news list
+    if (!validateForm()) {
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const thumbnailUrl = formData.imageUploadMethod === 'url' ? formData.imageUrl.trim() : ''
+      await newsService.create({
+        title: formData.title,
+        content: formData.content,
+        thumbnailUrl: thumbnailUrl || undefined,
+        isPublished: formData.isActive,
+        isFeatured: false
+      })
+
+      success('Tin tức đã được tạo thành công')
       navigate('/admin/news')
+    } catch (submitError) {
+      console.error('Failed to create news:', submitError)
+      error('Tạo tin tức thất bại. Vui lòng thử lại.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -363,9 +381,10 @@ export default function CreateNews() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  disabled={isSubmitting}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Lưu
+                  {isSubmitting ? 'Đang lưu...' : 'Lưu'}
                 </button>
               </div>
             </form>

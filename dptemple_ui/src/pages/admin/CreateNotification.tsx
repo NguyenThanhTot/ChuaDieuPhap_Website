@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import AdminHeader from '@/components/layout/AdminHeader'
 import AdminNavbar from '@/components/layout/AdminNavbar'
+import { useToast } from '@/components/common/Toast'
+import { notificationService } from '@/services/notificationService'
 
 interface NotificationFormData {
   title: string
@@ -18,6 +20,7 @@ interface NotificationFormData {
 export default function CreateNotification() {
   useDocumentTitle('Tạo thông báo - Admin')
   const navigate = useNavigate()
+  const { success, error } = useToast()
 
   const [formData, setFormData] = useState<NotificationFormData>({
     title: '',
@@ -31,6 +34,7 @@ export default function CreateNotification() {
   })
 
   const [errors, setErrors] = useState<Partial<NotificationFormData>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleInputChange = (field: keyof NotificationFormData, value: any) => {
     setFormData(prev => ({
@@ -58,18 +62,38 @@ export default function CreateNotification() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (validateForm()) {
-      // Here you would normally send the data to your API
-      console.log('Creating notification:', formData)
-      
-      // Show success message (you could use a toast library here)
-      alert('Tạo thông báo thành công!')
-      
-      // Navigate back to notifications list
+    if (!validateForm()) {
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      await notificationService.create({
+        title: formData.title,
+        content: formData.content,
+        type: formData.type,
+        targetAudience: formData.targetAudience,
+        isActive: formData.isActive,
+        isPublished: formData.isActive,
+        status: formData.isActive ? 'published' : 'draft',
+        publishDate: formData.publishDate,
+        expiryDate: formData.expiryDate || undefined,
+        isFeatured: false,
+        homepagePriority: 0,
+        attachments: formData.attachments.length
+      })
+
+      success('Thông báo đã được tạo thành công')
       navigate('/admin/notifications')
+    } catch (submitError) {
+      console.error('Failed to create notification:', submitError)
+      error('Tạo thông báo thất bại. Vui lòng thử lại.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -289,9 +313,10 @@ export default function CreateNotification() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  disabled={isSubmitting}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Tạo thông báo
+                  {isSubmitting ? 'Đang tạo...' : 'Tạo thông báo'}
                 </button>
               </div>
             </form>

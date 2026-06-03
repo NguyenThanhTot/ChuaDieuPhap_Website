@@ -1,5 +1,5 @@
 interface ContactItem {
-  id: number
+  id: string
   fullName: string
   email: string
   phone: string
@@ -13,7 +13,7 @@ interface ContactDetailModalProps {
   isOpen: boolean
   onClose: () => void
   contact: ContactItem | null
-  onStatusChange?: (id: number, newStatus: ContactItem['status']) => void
+  onStatusChange?: (id: string, newStatus: ContactItem['status']) => void
   onReply?: (contact: ContactItem) => void
 }
 

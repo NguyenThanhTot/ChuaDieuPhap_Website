@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import AdminHeader from '@/components/layout/AdminHeader'
 import AdminNavbar from '@/components/layout/AdminNavbar'
+import { useToast } from '@/components/common/Toast'
+import { eventService } from '@/services/eventService'
 
 interface EventFormData {
   title: string
@@ -30,6 +32,7 @@ interface EventFormData {
 export default function CreateEvent() {
   useDocumentTitle('Tạo Sự kiện - Admin')
   const navigate = useNavigate()
+  const { success, error } = useToast()
 
   const [formData, setFormData] = useState<EventFormData>({
     title: '',
@@ -55,6 +58,7 @@ export default function CreateEvent() {
   })
 
   const [errors, setErrors] = useState<Partial<Omit<EventFormData, 'imageFile'> & { imageFile: string }>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleInputChange = (field: keyof EventFormData, value: any) => {
     setFormData(prev => ({
@@ -111,18 +115,36 @@ export default function CreateEvent() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (validateForm()) {
-      // Here you would normally send the data to your API
-      console.log('Creating event:', formData)
-      
-      // Show success message (you could use a toast library here)
-      alert('Tạo sự kiện thành công!')
-      
-      // Navigate back to events list
+    if (!validateForm()) {
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const imageUrl = formData.imageUploadMethod === 'url' ? formData.imageUrl.trim() : ''
+      await eventService.create({
+        title: formData.title,
+        imageUrl: imageUrl || undefined,
+        startDate: formData.eventStartDate,
+        endDate: formData.eventEndDate,
+        eventTime: `${formData.startTime} - ${formData.endTime}`,
+        location: formData.location,
+        description: formData.description,
+        isFeatured: formData.isPinned,
+        isPublished: formData.isActive
+      })
+
+      success('Sự kiện đã được tạo thành công')
       navigate('/admin/events')
+    } catch (submitError) {
+      console.error('Failed to create event:', submitError)
+      error('Tạo sự kiện thất bại. Vui lòng thử lại.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -495,9 +517,10 @@ export default function CreateEvent() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  disabled={isSubmitting}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Tạo sự kiện
+                  {isSubmitting ? 'Đang tạo...' : 'Tạo sự kiện'}
                 </button>
               </div>
             </form>

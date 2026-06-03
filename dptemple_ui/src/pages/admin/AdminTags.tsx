@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import AdminHeader from '@/components/layout/AdminHeader'
 import AdminNavbar from '@/components/layout/AdminNavbar'
+import QuickEditModal from '@/components/common/QuickEditModal'
+import { useToast } from '@/components/common/Toast'
 
 interface TagItem {
   id: number
@@ -19,8 +21,9 @@ interface TagItem {
 export default function AdminTags() {
   useDocumentTitle('Quản lý Tags - Admin')
   const navigate = useNavigate()
+  const { success, warning } = useToast()
 
-  const [tags] = useState<TagItem[]>([
+  const [tags, setTags] = useState<TagItem[]>([
     {
       id: 1,
       name: 'Phật giáo',
@@ -113,6 +116,8 @@ export default function AdminTags() {
 
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [editItem, setEditItem] = useState<TagItem | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
   const filteredTags = tags.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -147,22 +152,34 @@ export default function AdminTags() {
     })
   }
 
+  const handleClearFilters = () => {
+    setSearchTerm('')
+    setFilterStatus('all')
+  }
+
   const handleEditClick = (tag: TagItem) => {
-    console.log('Edit tag:', tag)
-    // Navigate to edit page or open modal
+    setEditItem(tag)
+    setIsEditModalOpen(true)
+  }
+
+  const handleSaveTag = (updatedTag: TagItem) => {
+    setTags((prev) => prev.map((item) => item.id === updatedTag.id ? updatedTag : item))
+    setIsEditModalOpen(false)
+    success('Đã cập nhật tag thành công')
   }
 
   const handleStatusToggle = (id: number, currentStatus: TagItem['status']) => {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active'
-    console.log('Toggle status:', id, newStatus)
-    // Update status via API
+    setTags((prev) => prev.map((item) => item.id === id ? { ...item, status: newStatus } : item))
+    success(`Đã chuyển trạng thái sang ${newStatus === 'active' ? 'Hoạt động' : 'Không hoạt động'}`)
   }
 
   const handleDeleteClick = (id: number) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa tag này?')) {
-      console.log('Delete tag:', id)
-      // Delete via API
+    if (!window.confirm('Bạn có chắc chắn muốn xóa tag này?')) {
+      return
     }
+    setTags((prev) => prev.filter((tag) => tag.id !== id))
+    warning('Đã xóa tag')
   }
 
   return (
@@ -222,7 +239,10 @@ export default function AdminTags() {
                     <option value="active">Hoạt động</option>
                     <option value="inactive">Không hoạt động</option>
                   </select>
-                  <button className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                  <button
+                    onClick={handleClearFilters}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
@@ -374,7 +394,12 @@ export default function AdminTags() {
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </div>      <QuickEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        item={editItem}
+        itemType="tag"
+        onSave={handleSaveTag}
+      />    </div>
   )
 }
