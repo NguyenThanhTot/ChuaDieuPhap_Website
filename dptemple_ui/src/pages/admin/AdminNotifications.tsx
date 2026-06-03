@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import AdminHeader from '@/components/layout/AdminHeader'
@@ -6,180 +6,168 @@ import AdminNavbar from '@/components/layout/AdminNavbar'
 import ConfirmDialog from '@/components/common/ConfirmDialog'
 import NotificationDetailModal from '@/components/common/NotificationDetailModal'
 import { useToast } from '@/components/common/Toast'
-
-interface NotificationItem {
-  id: number
-  title: string
-  type: 'general' | 'event' | 'course' | 'urgent'
-  targetAudience: 'all' | 'phat_tu' | 'tu_sinh' | 'ban_to_chuc'
-  status: 'published' | 'draft' | 'expired'
-  publishDate: string
-  expiryDate?: string
-  createdAt: string
-  views: number
-  attachments: number
-}
+import { useAuth } from '@/contexts/AuthContext'
+import { notificationService } from '@/services/notificationService'
+import type { Notification } from '@/types'
 
 export default function AdminNotifications() {
   useDocumentTitle('Quản lý Thông báo - Admin')
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { success } = useToast()
 
-  const [notifications] = useState<NotificationItem[]>([
-    {
-      id: 1,
-      title: 'Thông báo đăng ký Quy Y Tam Bảo',
-      type: 'general',
-      targetAudience: 'all',
-      status: 'published',
-      publishDate: '2026-05-08',
-      createdAt: '2026-05-08',
-      views: 1250,
-      attachments: 2
-    },
-    {
-      id: 2,
-      title: 'Khai mạc khoá tu mùa hè 2026',
-      type: 'course',
-      targetAudience: 'tu_sinh',
-      status: 'published',
-      publishDate: '2026-05-07',
-      expiryDate: '2026-05-20',
-      createdAt: '2026-05-07',
-      views: 890,
-      attachments: 1
-    },
-    {
-      id: 3,
-      title: 'Lễ Phật Đản 2026 tại Chùa Diệu Pháp',
-      type: 'event',
-      targetAudience: 'all',
-      status: 'published',
-      publishDate: '2026-05-06',
-      createdAt: '2026-05-06',
-      views: 2340,
-      attachments: 3
-    },
-    {
-      id: 4,
-      title: 'Thông báo khẩn: Thay đổi lịch hoạt động',
-      type: 'urgent',
-      targetAudience: 'phat_tu',
-      status: 'expired',
-      publishDate: '2026-05-05',
-      expiryDate: '2026-05-10',
-      createdAt: '2026-05-05',
-      views: 456,
-      attachments: 0
-    },
-    {
-      id: 5,
-      title: 'Hướng dẫn tham gia khóa tu online',
-      type: 'course',
-      targetAudience: 'tu_sinh',
-      status: 'draft',
-      publishDate: '',
-      createdAt: '2026-05-04',
-      views: 0,
-      attachments: 1
-    }
-  ])
-
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState<string>('all')
   const [filterStatus, setFilterStatus] = useState<string>('all')
-  const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null)
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null })
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: string | null }>({ isOpen: false, id: null })
 
-  const filteredNotifications = notifications.filter(item => {
+  useEffect(() => {
+    const loadNotifications = async () => {
+      try {
+        setLoading(true)
+        const response = await notificationService.findAllPublished({ page: 0, size: 20, sort: ['homepagePriority,desc'] })
+        setNotifications(response.data.content)
+      } catch (error) {
+        console.error('Failed to load notifications:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadNotifications()
+  }, [])
+
+  const filteredNotifications = notifications.filter((item) => {
     const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesType = filterType === 'all' || item.type === filterType
-    const matchesStatus = filterStatus === 'all' || item.status === filterStatus
+    const matchesType = filterType === 'all' || (item.isFeatured ? 'urgent' : 'general') === filterType
+    const matchesStatus = filterStatus === 'all' || (item.isPublished ? 'published' : 'draft') === filterStatus
     return matchesSearch && matchesType && matchesStatus
   })
 
-  const getTypeColor = (type: string) => {
+  const getTypeColor = (type?: Notification['type']) => {
     switch (type) {
-      case 'general': return 'bg-blue-100 text-blue-800'
-      case 'event': return 'bg-green-100 text-green-800'
-      case 'course': return 'bg-purple-100 text-purple-800'
-      case 'urgent': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'event':
+      case 'course':
+      case 'urgent':
+        return 'bg-red-100 text-red-800'
+      case 'general':
+      default:
+        return 'bg-blue-100 text-blue-800'
     }
   }
 
-  const getTypeText = (type: string) => {
+  const getTypeText = (type?: Notification['type']) => {
     switch (type) {
-      case 'general': return 'Thông báo chung'
-      case 'event': return 'Thông báo sự kiện'
-      case 'course': return 'Thông báo khóa tu'
-      case 'urgent': return 'Thông báo khẩn'
-      default: return type
+      case 'general':
+        return 'Thông báo chung'
+      case 'event':
+        return 'Thông báo sự kiện'
+      case 'course':
+        return 'Thông báo khóa tu'
+      case 'urgent':
+        return 'Thông báo khẩn'
+      default:
+        return 'Thông báo'
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status?: Notification['status']) => {
     switch (status) {
-      case 'published': return 'bg-green-100 text-green-800'
-      case 'draft': return 'bg-yellow-100 text-yellow-800'
-      case 'expired': return 'bg-gray-100 text-gray-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'published':
+        return 'bg-green-100 text-green-800'
+      case 'expired':
+        return 'bg-gray-100 text-gray-800'
+      default:
+        return 'bg-yellow-100 text-yellow-800'
     }
   }
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status?: Notification['status']) => {
     switch (status) {
-      case 'published': return 'Đã đăng'
-      case 'draft': return 'Bản nháp'
-      case 'expired': return 'Hết hạn'
-      default: return status
+      case 'published':
+        return 'Đã đăng'
+      case 'expired':
+        return 'Hết hạn'
+      default:
+        return 'Bản nháp'
     }
   }
 
-  const getTargetAudienceText = (audience: string) => {
+  const getTargetAudienceText = (audience?: Notification['targetAudience']) => {
     switch (audience) {
-      case 'all': return 'Tất cả'
-      case 'phat_tu': return 'Phật tử'
-      case 'tu_sinh': return 'Tu sinh'
-      case 'ban_to_chuc': return 'Ban tổ chức'
-      default: return audience
+      case 'all':
+        return 'Tất cả'
+      case 'phat_tu':
+        return 'Phật tử'
+      case 'tu_sinh':
+        return 'Tu sinh'
+      case 'ban_to_chuc':
+        return 'Ban tổ chức'
+      default:
+        return 'Chưa xác định'
     }
   }
 
-  const formatViews = (views: number) => {
+  const formatViews = (views = 0) => {
     if (views >= 1000) {
       return `${(views / 1000).toFixed(1)}K`
     }
     return views.toString()
   }
 
-  const handleViewNotification = (notification: NotificationItem) => {
+  const handleViewNotification = (notification: Notification) => {
     setSelectedNotification(notification)
     setIsDetailModalOpen(true)
   }
 
-  const handleEditNotification = (notification: NotificationItem) => {
+  const handleEditNotification = (notification: Notification) => {
     navigate(`/admin/notifications/edit/${notification.id}`)
   }
 
-  const handleDeleteNotification = (id: number) => {
+  const handleDeleteNotification = (id: string) => {
     setDeleteConfirm({ isOpen: true, id })
   }
 
-  const confirmDelete = () => {
-    if (deleteConfirm.id) {
-      // Here you would delete via API
-      console.log('Delete notification:', deleteConfirm.id)
+  const confirmDelete = async () => {
+    if (!deleteConfirm.id || !user) {
+      setDeleteConfirm({ isOpen: false, id: null })
+      return
+    }
+
+    try {
+      await notificationService.delete(deleteConfirm.id, user.id)
+      setNotifications((prev) => prev.filter((item) => item.id !== deleteConfirm.id))
       success('Đã xóa thông báo thành công')
+    } catch (error) {
+      console.error('Failed to delete notification:', error)
+    } finally {
       setDeleteConfirm({ isOpen: false, id: null })
     }
   }
 
-  const handleStatusChange = (id: number, newStatus: NotificationItem['status']) => {
-    // Here you would update status via API
-    console.log('Update status:', id, newStatus)
-    success(`Đã cập nhật trạng thái thành ${newStatus === 'published' ? 'Đã đăng' : newStatus === 'draft' ? 'Bản nháp' : 'Hết hạn'}`)
+  const handleStatusChange = async (id: string, newStatus: Notification['status']) => {
+    const notification = notifications.find((item) => item.id === id)
+    if (!notification || !user) return
+
+    try {
+      const response = await notificationService.update(id, {
+        ...notification,
+        isPublished: newStatus === 'published',
+        status: newStatus
+      })
+      setNotifications((prev) => prev.map((item) => (item.id === id ? response.data : item)))
+      success(`Đã cập nhật trạng thái thành ${newStatus === 'published' ? 'Đã đăng' : newStatus === 'expired' ? 'Hết hạn' : 'Bản nháp'}`)
+    } catch (error) {
+      console.error('Failed to update notification status:', error)
+    }
+  }
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Đang tải...</div>
   }
 
   return (
@@ -299,7 +287,7 @@ export default function AdminNotifications() {
                         {formatViews(notification.views)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {notification.attachments > 0 ? (
+                        {(notification.attachments ?? 0) > 0 ? (
                           <span className="flex items-center gap-1">
                             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />

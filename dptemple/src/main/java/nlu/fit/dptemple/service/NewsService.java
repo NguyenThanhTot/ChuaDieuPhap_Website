@@ -19,7 +19,11 @@ public interface NewsService {
 
     List<News> findHomepageNews();
 
+    List<News> findHomepageNewsLimited();
+
     List<News> findFeaturedNews();
+
+    List<News> findFeaturedNewsLimited();
 
     Page<News> findAllPublished(Pageable pageable);
 

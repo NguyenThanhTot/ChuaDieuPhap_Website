@@ -33,7 +33,7 @@ export interface User {
   gender?: 'male' | 'female' | 'other'
   occupation?: string
   address?: string
-  role: 'admin' | 'moderator' | 'member'
+  role: 'admin' | 'moderator' | 'member' | 'user'
   avatarUrl?: string
   isActive: boolean
   createdAt: string
@@ -65,7 +65,7 @@ export interface UserResponse {
   gender?: 'male' | 'female' | 'other'
   occupation?: string
   address?: string
-  role: 'admin' | 'moderator' | 'member'
+  role: 'admin' | 'moderator' | 'member' | 'user'
   avatarUrl?: string
   isActive: boolean
   createdAt: string
@@ -78,9 +78,33 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  accessToken: string
-  refreshToken?: string
-  user: UserResponse
+  token: string
+  id: string
+  fullName: string
+  dharmaName?: string
+  email: string
+  role: 'admin' | 'moderator' | 'member' | 'user'
+  avatarUrl?: string
+  loginTime: string
+}
+
+export interface RegisterRequest {
+  fullName: string
+  email: string
+  password: string
+  dharmaName?: string
+  phone?: string
+  occupation?: string
+  address?: string
+}
+
+export interface ForgetPasswordRequest {
+  email: string
+}
+
+export interface ResetPasswordRequest {
+  token: string
+  newPassword: string
 }
 
 // Context
@@ -108,6 +132,14 @@ export interface Notification {
   id: string
   title: string
   content: string
+  type?: 'general' | 'event' | 'course' | 'urgent'
+  targetAudience?: 'all' | 'phat_tu' | 'tu_sinh' | 'ban_to_chuc'
+  status?: 'published' | 'draft' | 'expired'
+  publishDate?: string
+  expiryDate?: string
+  views?: number
+  attachments?: number
+  isActive?: boolean
   isPublished: boolean
   isFeatured: boolean
   homepagePriority?: number

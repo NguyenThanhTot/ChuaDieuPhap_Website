@@ -19,7 +19,11 @@ public interface NotificationService {
 
     List<Notification> findHomepageNotifications();
 
+    List<Notification> findHomepageNotificationsLimited();
+
     List<Notification> findFeaturedNotifications();
+
+    List<Notification> findFeaturedNotificationsLimited();
 
     Page<Notification> findAllPublished(Pageable pageable);
 

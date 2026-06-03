@@ -182,6 +182,58 @@ const createNews = async () => {
       isPublished: true,
       homepagePriority: 2,
     },
+    {
+      title: 'Lễ Vesak 2026: Ngày Hội Tự Biếc Vô Ngã',
+      publishedDate: '2026-05-10',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=80',
+      content: `# Lễ Vesak 2026: Ngày Hội Tự Biếc Vô Ngã
+
+Chùa Diệu Pháp hân hoan mời quý Phật tử về tham dự Đại lễ Vesak 2026 để cùng nhau kỷ niệm ngày sinh, thành đạo và nhập niết bàn của Đức Phật Thích Ca Mâu Ni.
+
+## Ý nghĩa ngày Vesak
+
+Vesak là một trong những ngày lễ quan trọng nhất trong Phật giáo, đánh dấu ba sự kiện trọng đại trong cuộc đời Đức Phật:
+- Ngày sinh của Đức Phật (lần sinh thứ nhất)
+- Ngày Đức Phật thành đạo dưới cội Bồ đề
+- Ngày Đức Phật nhập niết bàn
+
+Đây là dịp để chúng con quy ngưỡng, tưởng nhớ công đức vô lượng của Đức Phật và phát nguyện tu tập theo chân lý của Ngài.
+
+## Chương trình lễ hội
+
+### Lễ chính (26/05/2026)
+- 07:00: Tập trung và chuẩn bị nghi lễ
+- 08:00: Lễ tắm Phật và dâng hoa
+- 09:00: Nghi lễ chính thức
+- 10:00: Pháp thoại: "Bài học từ cuộc đời Đức Phật"
+- 11:30: Cúng dường và phát nguyện
+
+### Hoạt động cộng đồng
+- 13:30: Diễu hành rước đèn
+- 15:00: Tổ chức các hoạt động văn nghệ
+- 16:30: Trao quà cho người có hoàn cảnh khó khăn
+- 18:00: Thắp nến cầu nguyện hòa bình
+
+## Các hoạt động đặc biệt
+
+Ngoài lễ chính, Chùa Diệu Pháp còn tổ chức:
+- Triển lãm về cuộc đời Đức Phật
+- Workshop làm đèn lồng Vesak
+- Hoạt động cho trẻ em
+- Phát sách Phật pháp miễn phí
+
+## Lời mời
+
+Chùa Diệu Pháp trân trọng kính mời quý Phật tử, quý vị thiện nam tín nữ về tham dự Đại lễ Vesak 2026 để cùng nhau tạo công đức và lan tỏa tinh thần từ bi, trí tuệ của Phật giáo.
+
+Hòa bình và hạnh phúc sẽ đến với những ai có tâm an tịnh và lòng từ bi.
+
+Thời gian: 08:00 - 18:00, ngày 26/05/2026
+Địa điểm: Chùa Diệu Pháp, hẻm 106/47/9 đường Bình Lợi, phường Bình Lợi Trung, Tp. HCM`,
+      isFeatured: true,
+      isPublished: true,
+      homepagePriority: 3,
+    },
   ]
   const results = []
   for (const item of items) {

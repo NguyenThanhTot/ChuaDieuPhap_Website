@@ -65,8 +65,20 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<Notification> findHomepageNotificationsLimited() {
+        return notificationRepository.findHomepageNotificationsLimited();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Notification> findFeaturedNotifications() {
         return notificationRepository.findFeaturedNotifications();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Notification> findFeaturedNotificationsLimited() {
+        return notificationRepository.findFeaturedNotificationsLimited();
     }
 
     @Override

@@ -1,24 +1,12 @@
-interface NotificationItem {
-  id: number
-  title: string
-  content?: string
-  type: 'general' | 'event' | 'course' | 'urgent'
-  targetAudience: 'all' | 'phat_tu' | 'tu_sinh' | 'ban_to_chuc'
-  status: 'published' | 'draft' | 'expired'
-  publishDate: string
-  expiryDate?: string
-  createdAt: string
-  views: number
-  attachments: number
-}
+import type { Notification } from '@/types'
 
 interface NotificationDetailModalProps {
   isOpen: boolean
   onClose: () => void
-  notification: NotificationItem | null
-  onEdit?: (notification: NotificationItem) => void
-  onDelete?: (id: number) => void
-  onStatusChange?: (id: number, newStatus: NotificationItem['status']) => void
+  notification: Notification | null
+  onEdit?: (notification: Notification) => void
+  onDelete?: (id: string) => void
+  onStatusChange?: (id: string, newStatus: Notification['status']) => void
 }
 
 export default function NotificationDetailModal({
@@ -40,62 +28,86 @@ export default function NotificationDetailModal({
     })
   }
 
-  const getTypeColor = (type: string) => {
+  const getTypeColor = (type?: Notification['type']) => {
     switch (type) {
-      case 'general': return 'bg-blue-100 text-blue-800'
-      case 'event': return 'bg-green-100 text-green-800'
-      case 'course': return 'bg-purple-100 text-purple-800'
-      case 'urgent': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'general':
+        return 'bg-blue-100 text-blue-800'
+      case 'event':
+        return 'bg-green-100 text-green-800'
+      case 'course':
+        return 'bg-purple-100 text-purple-800'
+      case 'urgent':
+        return 'bg-red-100 text-red-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
     }
   }
 
-  const getTypeText = (type: string) => {
+  const getTypeText = (type?: Notification['type']) => {
     switch (type) {
-      case 'general': return 'Thông báo chung'
-      case 'event': return 'Thông báo sự kiện'
-      case 'course': return 'Thông báo khóa tu'
-      case 'urgent': return 'Thông báo khẩn'
-      default: return type
+      case 'general':
+        return 'Thông báo chung'
+      case 'event':
+        return 'Thông báo sự kiện'
+      case 'course':
+        return 'Thông báo khóa tu'
+      case 'urgent':
+        return 'Thông báo khẩn'
+      default:
+        return 'Thông báo'
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status?: Notification['status']) => {
     switch (status) {
-      case 'published': return 'bg-green-100 text-green-800'
-      case 'draft': return 'bg-yellow-100 text-yellow-800'
-      case 'expired': return 'bg-gray-100 text-gray-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'published':
+        return 'bg-green-100 text-green-800'
+      case 'draft':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'expired':
+        return 'bg-gray-100 text-gray-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
     }
   }
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status?: Notification['status']) => {
     switch (status) {
-      case 'published': return 'Đã đăng'
-      case 'draft': return 'Bản nháp'
-      case 'expired': return 'Hết hạn'
-      default: return status
+      case 'published':
+        return 'Đã đăng'
+      case 'draft':
+        return 'Bản nháp'
+      case 'expired':
+        return 'Hết hạn'
+      default:
+        return 'Chưa xác định'
     }
   }
 
-  const getTargetAudienceText = (audience: string) => {
+  const getTargetAudienceText = (audience?: Notification['targetAudience']) => {
     switch (audience) {
-      case 'all': return 'Tất cả'
-      case 'phat_tu': return 'Phật tử'
-      case 'tu_sinh': return 'Tu sinh'
-      case 'ban_to_chuc': return 'Ban tổ chức'
-      default: return audience
+      case 'all':
+        return 'Tất cả'
+      case 'phat_tu':
+        return 'Phật tử'
+      case 'tu_sinh':
+        return 'Tu sinh'
+      case 'ban_to_chuc':
+        return 'Ban tổ chức'
+      default:
+        return 'Chưa xác định'
     }
   }
 
-  const formatViews = (views: number) => {
-    if (views >= 1000) {
-      return `${(views / 1000).toFixed(1)}K`
+  const formatViews = (views?: number) => {
+    const value = views ?? 0
+    if (value >= 1000) {
+      return `${(value / 1000).toFixed(1)}K`
     }
-    return views.toString()
+    return value.toString()
   }
 
-  const handleStatusChange = (newStatus: NotificationItem['status']) => {
+  const handleStatusChange = (newStatus: Notification['status']) => {
     if (onStatusChange) {
       onStatusChange(notification.id, newStatus)
     }
@@ -178,7 +190,7 @@ export default function NotificationDetailModal({
           </div>
 
           {/* Attachments */}
-          {notification.attachments > 0 && (
+          {(notification.attachments ?? 0) > 0 && (
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">Tệp đính kèm</label>
               <div className="flex items-center gap-2 text-sm text-gray-600">

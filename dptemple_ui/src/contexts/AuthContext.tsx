@@ -14,12 +14,26 @@ const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
-    const stored = localStorage.getItem('user')
-    return stored ? JSON.parse(stored) : null
+    try {
+      const stored = localStorage.getItem('user')
+      if (!stored || stored === 'undefined') {
+        localStorage.removeItem('user')
+        return null
+      }
+      return JSON.parse(stored)
+    } catch {
+      localStorage.removeItem('user')
+      return null
+    }
   })
-  const [accessToken, setAccessToken] = useState<string | null>(
-    () => localStorage.getItem('accessToken')
-  )
+  const [accessToken, setAccessToken] = useState<string | null>(() => {
+    const token = localStorage.getItem('accessToken')
+    if (!token || token === 'undefined') {
+      localStorage.removeItem('accessToken')
+      return null
+    }
+    return token
+  })
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
 
@@ -29,18 +43,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true)
     try {
       const res = await authService.login(data)
-      const { user, accessToken } = res.data
-      localStorage.setItem('accessToken', accessToken)
-      localStorage.setItem('user', JSON.stringify(user))
-      setUser(user)
-      setAccessToken(accessToken)
+      const loginData = res.data
+      const authenticatedUser: User = {
+        id: loginData.id,
+        fullName: loginData.fullName,
+        dharmaName: loginData.dharmaName,
+        email: loginData.email,
+        role: loginData.role,
+        avatarUrl: loginData.avatarUrl,
+        isActive: true,
+        createdAt: loginData.loginTime,
+        updatedAt: loginData.loginTime,
+      }
+      localStorage.setItem('accessToken', loginData.token)
+      localStorage.setItem('user', JSON.stringify(authenticatedUser))
+      setUser(authenticatedUser)
+      setAccessToken(loginData.token)
       navigate('/home')
     } finally {
       setIsLoading(false)
     }
   }, [navigate])
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await authService.logout()
+    } catch {
+      // ignore logout errors and clear local state anyway
+    }
+
     localStorage.removeItem('accessToken')
     localStorage.removeItem('user')
     setUser(null)

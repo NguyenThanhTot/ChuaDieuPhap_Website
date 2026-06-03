@@ -71,8 +71,20 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<Event> findHomepageEventsLimited() {
+        return eventRepository.findHomepageEventsLimited();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Event> findFeaturedEvents() {
         return eventRepository.findFeaturedEvents();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Event> findFeaturedEventsLimited() {
+        return eventRepository.findFeaturedEventsLimited();
     }
 
     @Override

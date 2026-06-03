@@ -19,6 +19,8 @@ public interface DharmaTalkService {
 
     List<DharmaTalk> findHomepageDharmaTalks();
 
+    List<DharmaTalk> findHomepageDharmaTalksLimited();
+
     Page<DharmaTalk> findAllPublished(Pageable pageable);
 
     Page<DharmaTalk> findAllDeleted(Pageable pageable);

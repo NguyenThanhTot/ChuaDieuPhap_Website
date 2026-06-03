@@ -20,7 +20,11 @@ public interface EventService {
 
     List<Event> findHomepageEvents();
 
+    List<Event> findHomepageEventsLimited();
+
     List<Event> findFeaturedEvents();
+
+    List<Event> findFeaturedEventsLimited();
 
     List<Event> findUpcomingEvents(LocalDate fromDate);
 

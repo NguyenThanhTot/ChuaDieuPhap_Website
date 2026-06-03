@@ -1,19 +1,21 @@
 import { useState, FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { authService } from '@/services/authService'
+import type { RegisterRequest } from '@/types'
 
 export default function RegisterPage() {
-  const [formData, setFormData] = useState({
-    username: '',
+  const [formData, setFormData] = useState<RegisterRequest>({
+    fullName: '',
+    dharmaName: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    fullName: '',
     phone: ''
   })
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const navigate = useNavigate()
   
   useDocumentTitle('Đăng ký - Chùa Diệu Pháp')
 
@@ -24,16 +26,19 @@ export default function RegisterPage() {
     }))
   }
 
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setConfirmPassword(e.target.value)
+  }
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
-    
-    // Validation
-    if (formData.password !== formData.confirmPassword) {
+
+    if (formData.password !== confirmPassword) {
       setError('Mật khẩu xác nhận không khớp')
       return
     }
-    
+
     if (formData.password.length < 6) {
       setError('Mật khẩu phải có ít nhất 6 ký tự')
       return
@@ -41,12 +46,19 @@ export default function RegisterPage() {
 
     try {
       setIsLoading(true)
-      // Mock registration - in real app, call API
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // After successful registration, redirect to login
-      navigate('/auth/login')
+      // Register via auth endpoint
+      await authService.register(formData)
+      setSuccess('Đăng ký thành công. Vui lòng kiểm tra email và xác thực trước khi đăng nhập.')
+      setFormData({
+        fullName: '',
+        dharmaName: '',
+        email: '',
+        password: '',
+        phone: ''
+      })
+      setConfirmPassword('')
     } catch (err) {
+      console.error(err)
       setError('Đăng ký không thành công. Vui lòng thử lại.')
     } finally {
       setIsLoading(false)
@@ -87,19 +99,18 @@ export default function RegisterPage() {
           />
         </div>
 
-        {/* Username */}
+        {/* Dharma Name */}
         <div>
           <label className="block text-sm font-medium text-[#2d4a3e] mb-1">
-            Tên đăng nhập
+            Tên pháp danh (tùy chọn)
           </label>
           <input
             type="text"
-            name="username"
-            value={formData.username}
+            name="dharmaName"
+            value={formData.dharmaName}
             onChange={handleChange}
-            placeholder="Chọn tên đăng nhập"
+            placeholder="Nhập tên pháp danh"
             className="w-full px-3 py-2 border border-[#d4d4aa] rounded-lg focus:ring-2 focus:ring-[#2d4a3e] focus:border-[#2d4a3e] outline-none transition text-sm"
-            required
           />
         </div>
 
@@ -122,12 +133,12 @@ export default function RegisterPage() {
         {/* Phone */}
         <div>
           <label className="block text-sm font-medium text-[#2d4a3e] mb-1">
-            Số điện thoại
+            Số điện thoại (tùy chọn)
           </label>
           <input
             type="tel"
             name="phone"
-            value={formData.phone}
+            value={formData.phone || ''}
             onChange={handleChange}
             placeholder="Nhập số điện thoại"
             className="w-full px-3 py-2 border border-[#d4d4aa] rounded-lg focus:ring-2 focus:ring-[#2d4a3e] focus:border-[#2d4a3e] outline-none transition text-sm"
@@ -157,9 +168,8 @@ export default function RegisterPage() {
           </label>
           <input
             type="password"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
+            value={confirmPassword}
+            onChange={handleConfirmPasswordChange}
             placeholder="Nhập lại mật khẩu"
             className="w-full px-3 py-2 border border-[#d4d4aa] rounded-lg focus:ring-2 focus:ring-[#2d4a3e] focus:border-[#2d4a3e] outline-none transition text-sm"
             required
@@ -170,6 +180,12 @@ export default function RegisterPage() {
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
             {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-lg text-sm">
+            {success}
           </div>
         )}
 

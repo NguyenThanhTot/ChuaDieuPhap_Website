@@ -66,6 +66,12 @@ public class DharmaTalkServiceImpl implements DharmaTalkService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<DharmaTalk> findHomepageDharmaTalksLimited() {
+        return dharmaTalkRepository.findHomepageDharmaTalksLimited();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<DharmaTalk> findAllPublished(Pageable pageable) {
         return dharmaTalkRepository.findByIsPublishedTrueAndDeletedAtIsNullOrderByCreatedAtDesc(pageable);
     }
