@@ -16,8 +16,14 @@ public interface EventRepository extends JpaRepository<Event, String> {
     @Query("SELECT e FROM Event e WHERE e.isPublished = true AND e.deletedAt IS NULL AND e.homepagePriority > 0 ORDER BY e.homepagePriority ASC, e.startDate DESC")
     List<Event> findHomepageEvents();
 
+    @Query("SELECT e FROM Event e WHERE e.isPublished = true AND e.deletedAt IS NULL AND e.homepagePriority > 0 ORDER BY e.homepagePriority ASC, e.startDate DESC LIMIT 6")
+    List<Event> findHomepageEventsLimited();
+
     @Query("SELECT e FROM Event e WHERE e.isPublished = true AND e.deletedAt IS NULL AND e.isFeatured = true ORDER BY e.startDate DESC")
     List<Event> findFeaturedEvents();
+
+    @Query("SELECT e FROM Event e WHERE e.isPublished = true AND e.deletedAt IS NULL AND e.isFeatured = true ORDER BY e.startDate DESC LIMIT 3")
+    List<Event> findFeaturedEventsLimited();
 
     List<Event> findByIsPublishedTrueAndDeletedAtIsNullAndStartDateGreaterThanEqualOrderByStartDateAsc(LocalDate date);
 

@@ -1,61 +1,65 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { useAuth } from '@/contexts/AuthContext'
+import { eventService } from '@/services/eventService'
 import AdminNavbar from '@/components/layout/AdminNavbar'
 import AdminHeader from '@/components/layout/AdminHeader'
+import type { Event } from '@/types'
 
 export default function AdminEvents() {
   useDocumentTitle('Quản lý sự kiện - Admin')
   const navigate = useNavigate()
+  const { user } = useAuth()
 
-  // Mock data for events
-  const [events] = useState([
-    {
-      id: 1,
-      title: 'Khóa tu An Lạc',
-      location: 'Chùa Diệu Pháp',
-      type: 'Khóa tu',
-      image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=100&q=80',
-      startTime: '2026-05-15 08:00',
-      endTime: '2026-05-15 17:00',
-      registrationStart: '2026-05-01',
-      registrationEnd: '2026-05-10',
-      status: 'Hoạt động'
-    },
-    {
-      id: 2,
-      title: 'Lễ Phật Đản',
-      location: 'Chùa Diệu Pháp',
-      type: 'Lễ Phật',
-      image: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=100&q=80',
-      startTime: '2026-05-26 06:00',
-      endTime: '2026-05-26 12:00',
-      registrationStart: '2026-05-10',
-      registrationEnd: '2026-05-20',
-      status: 'Hoạt động'
-    },
-    {
-      id: 3,
-      title: 'Hoa đăng Vu Lan',
-      location: 'Chùa Diệu Pháp',
-      type: 'Hoa đăng',
-      image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=100&q=80',
-      startTime: '2026-07-15 18:00',
-      endTime: '2026-07-15 21:00',
-      registrationStart: '2026-07-01',
-      registrationEnd: '2026-07-10',
-      status: 'Hoạt động'
-    }
-  ])
-
+  const [events, setEvents] = useState<Event[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
 
-  const filteredEvents = events.filter(event => {
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        setLoading(true)
+        const response = await eventService.findAllPublished({ page: 0, size: 20, sort: ['startDate,asc'] })
+        setEvents(response.data.content)
+      } catch (error) {
+        console.error('Failed to load events:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadEvents()
+  }, [])
+
+  const handleDeleteEvent = async (id: string) => {
+    if (!user) return
+    try {
+      await eventService.delete(id, user.id)
+      setEvents((prev) => prev.filter((item) => item.id !== id))
+    } catch (error) {
+      console.error('Failed to delete event:', error)
+    }
+  }
+
+  const filteredEvents = events.filter((event) => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         event.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         event.type.toLowerCase().includes(searchTerm.toLowerCase())
+                         (event.location ?? '').toLowerCase().includes(searchTerm.toLowerCase())
     return matchesSearch
   })
+
+  const getStatusColor = (isPublished: boolean) =>
+    isPublished ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+
+  const getStatusText = (isPublished: boolean) =>
+    isPublished ? 'Hoạt động' : 'Bản nháp'
+
+  const getEventType = (event: Event) =>
+    event.isFeatured ? 'Nổi bật' : 'Sự kiện'
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Đang tải...</div>
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -123,89 +127,62 @@ export default function AdminEvents() {
 
             {/* Events Table */}
             <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    STT
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Hình ảnh
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tiêu đề sự kiện
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Thời gian sự kiện
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Thời gian đăng ký
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Trạng thái
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Chức năng
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredEvents.map((event, index) => (
-                  <tr key={event.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {index + 1}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <img
-                        src={event.image}
-                        alt={event.title}
-                        className="w-12 h-12 rounded object-cover"
-                      />
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm">
-                        <div className="font-medium text-gray-900">{event.title}</div>
-                        <div className="text-gray-500">{event.location}</div>
-                        <span className="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
-                          {event.type}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      <div className="space-y-1">
-                        <div>Bắt đầu: {event.startTime}</div>
-                        <div>Kết thúc: {event.endTime}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      <div className="space-y-1">
-                        <div>Bắt đầu: {event.registrationStart}</div>
-                        <div>Kết thúc: {event.registrationEnd}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-sm text-gray-900">{event.status}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex items-center gap-3">
-                        <button className="text-blue-600 hover:text-blue-800">
-                          👁️
-                        </button>
-                        <button className="text-green-600 hover:text-green-800">
-                          ✏️
-                        </button>
-                        <button className="text-red-600 hover:text-red-800">
-                          🗑️
-                        </button>
-                      </div>
-                    </td>
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STT</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hình ảnh</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tiêu đề sự kiện</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian sự kiện</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian đăng ký</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chức năng</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredEvents.map((event, index) => (
+                    <tr key={event.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{index + 1}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <img
+                          src={event.imageUrl || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=100&q=80'}
+                          alt={event.title}
+                          className="w-12 h-12 rounded object-cover"
+                        />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm">
+                          <div className="font-medium text-gray-900">{event.title}</div>
+                          <div className="text-gray-500">{event.location || 'Chưa có địa điểm'}</div>
+                          <span className="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">{getEventType(event)}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        <div className="space-y-1">
+                          <div>Bắt đầu: {event.startDate}</div>
+                          <div>Kết thúc: {event.endDate}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        <div className="space-y-1">
+                          <div>Giờ: {event.eventTime || 'Chưa có giờ'}</div>
+                          <div>Ưu tiên: {event.homepagePriority ?? 0}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(event.isPublished)}`}>{getStatusText(event.isPublished)}</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div className="flex items-center gap-3">
+                          <button onClick={() => navigate(`/admin/events/edit/${event.id}`)} className="text-blue-600 hover:text-blue-800">👁️</button>
+                          <button onClick={() => navigate(`/admin/events/edit/${event.id}`)} className="text-green-600 hover:text-green-800">✏️</button>
+                          <button onClick={() => handleDeleteEvent(event.id)} className="text-red-600 hover:text-red-800">🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
             {/* Pagination */}
@@ -214,21 +191,11 @@ export default function AdminEvents() {
                 Hiển thị 1 đến {filteredEvents.length} của {events.length} kết quả
               </div>
               <div className="flex items-center gap-2">
-                <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">
-                  ←
-                </button>
-                <button className="px-3 py-1 bg-green-600 text-white rounded">
-                  1
-                </button>
-                <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">
-                  2
-                </button>
-                <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">
-                  3
-                </button>
-                <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">
-                  →
-                </button>
+                <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">←</button>
+                <button className="px-3 py-1 bg-green-600 text-white rounded">1</button>
+                <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">2</button>
+                <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">3</button>
+                <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">→</button>
                 <select className="ml-4 px-3 py-1 border border-gray-300 rounded">
                   <option>10 / page</option>
                   <option>25 / page</option>

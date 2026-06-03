@@ -1,78 +1,63 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import AdminHeader from '@/components/layout/AdminHeader'
 import AdminNavbar from '@/components/layout/AdminNavbar'
-
-interface NewsItem {
-  id: number
-  title: string
-  image: string
-  category: string
-  tags: string[]
-  author: string
-  status: 'published' | 'draft' | 'archived'
-  createdAt: string
-}
+import { useAuth } from '@/contexts/AuthContext'
+import { newsService } from '@/services/newsService'
+import type { News } from '@/types'
 
 export default function AdminNews() {
   useDocumentTitle('Quản lý Tin tức - Chùa Diệu Pháp')
   const navigate = useNavigate()
-  
+  const { user } = useAuth()
+
   const [searchTerm, setSearchTerm] = useState('')
-  const [newsItems] = useState<NewsItem[]>([
-    {
-      id: 1,
-      title: 'Lễ Vu Lan báo hiếu 2026',
-      image: '/placeholder-image.jpg',
-      category: 'Sự kiện',
-      tags: ['Vu Lan', 'Báo hiếu', 'Phật sự'],
-      author: 'Admin',
-      status: 'published',
-      createdAt: '2026-08-01'
-    },
-    {
-      id: 2,
-      title: 'Khai mạc khoá tu mùa hè',
-      image: '/placeholder-image.jpg',
-      category: 'Sự kiện',
-      tags: ['Khoá tu', 'Mùa hè', 'Tu tập'],
-      author: 'Admin',
-      status: 'published',
-      createdAt: '2026-07-15'
-    },
-    {
-      id: 3,
-      title: 'Chùa Diệu Pháp đón nhận tượng Phật',
-      image: '/placeholder-image.jpg',
-      category: 'Tin tức',
-      tags: ['Tượng Phật', 'Vật phẩm'],
-      author: 'Admin',
-      status: 'draft',
-      createdAt: '2026-07-10'
+  const [newsItems, setNewsItems] = useState<News[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadNews = async () => {
+      try {
+        setLoading(true)
+        const response = await newsService.findAllPublished({ page: 0, size: 20, sort: ['publishedDate,desc'] })
+        setNewsItems(response.data.content)
+      } catch (error) {
+        console.error('Failed to load news:', error)
+      } finally {
+        setLoading(false)
+      }
     }
-  ])
 
-  const filteredNews = newsItems.filter(item =>
-    item.title.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+    loadNews()
+  }, [])
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'published': return 'bg-green-100 text-green-800'
-      case 'draft': return 'bg-yellow-100 text-yellow-800'
-      case 'archived': return 'bg-gray-100 text-gray-800'
-      default: return 'bg-gray-100 text-gray-800'
+  const handleDeleteNews = async (id: string) => {
+    if (!user) return
+    try {
+      await newsService.delete(id, user.id)
+      setNewsItems((prev) => prev.filter((item) => item.id !== id))
+    } catch (error) {
+      console.error('Failed to delete news item:', error)
     }
   }
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'published': return 'Đã đăng'
-      case 'draft': return 'Bản nháp'
-      case 'archived': return 'Lưu trữ'
-      default: return status
-    }
+  const filteredNews = newsItems.filter((item) =>
+    item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.author.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const getStatusColor = (isPublished: boolean) =>
+    isPublished ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+
+  const getStatusText = (isPublished: boolean) =>
+    isPublished ? 'Đã đăng' : 'Bản nháp'
+
+  const getPriorityLabel = (item: News) =>
+    item.homepagePriority ? `Ưu tiên ${item.homepagePriority}` : 'Tin mới'
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Đang tải...</div>
   }
 
   return (
@@ -148,9 +133,11 @@ export default function AdminNews() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STT</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hình ảnh</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tiêu đề</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tags</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hình ảnh</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tiêu đề</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tác giả</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày đăng</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ưu tiên</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
                   </tr>
@@ -160,33 +147,37 @@ export default function AdminNews() {
                     <tr key={item.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{index + 1}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                          <span className="text-gray-400 text-xs">No img</span>
-                        </div>
+                        <img
+                          src={item.thumbnailUrl || '/placeholder-image.jpg'}
+                          alt={item.title}
+                          className="w-12 h-12 rounded-lg object-cover"
+                        />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{item.title}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.category}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.author.fullName}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.publishedDate?.slice(0, 10) || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{getPriorityLabel(item)}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-wrap gap-1">
-                          {item.tags.map((tag, tagIndex) => (
-                            <span key={tagIndex} className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.author}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(item.status)}`}>
-                          {getStatusText(item.status)}
+                        <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(item.isPublished)}`}>
+                          {getStatusText(item.isPublished)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <div className="flex gap-2">
-                          <button className="text-blue-600 hover:text-blue-900">Sửa</button>
-                          <button className="text-red-600 hover:text-red-900">Xóa</button>
+                          <button
+                            onClick={() => navigate(`/admin/news/edit/${item.id}`)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            onClick={() => handleDeleteNews(item.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Xóa
+                          </button>
                         </div>
                       </td>
                     </tr>

@@ -15,8 +15,14 @@ public interface NewsRepository extends JpaRepository<News, String> {
     @Query("SELECT n FROM News n WHERE n.isPublished = true AND n.deletedAt IS NULL AND n.homepagePriority > 0 ORDER BY n.homepagePriority ASC, n.publishedDate DESC")
     List<News> findHomepageNews();
 
+    @Query("SELECT n FROM News n WHERE n.isPublished = true AND n.deletedAt IS NULL AND n.homepagePriority > 0 ORDER BY n.homepagePriority ASC, n.publishedDate DESC LIMIT 6")
+    List<News> findHomepageNewsLimited();
+
     @Query("SELECT n FROM News n WHERE n.isPublished = true AND n.deletedAt IS NULL AND n.isFeatured = true ORDER BY n.publishedDate DESC")
     List<News> findFeaturedNews();
+
+    @Query("SELECT n FROM News n WHERE n.isPublished = true AND n.deletedAt IS NULL AND n.isFeatured = true ORDER BY n.publishedDate DESC LIMIT 3")
+    List<News> findFeaturedNewsLimited();
 
     Page<News> findByIsPublishedTrueAndDeletedAtIsNullOrderByPublishedDateDesc(Pageable pageable);
 

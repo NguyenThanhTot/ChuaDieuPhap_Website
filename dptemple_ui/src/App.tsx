@@ -5,6 +5,8 @@ import AuthLayout from '@/components/layout/AuthLayout'
 import AdminLayout from '@/components/layout/AdminLayout'
 import LoginPage from '@/pages/LoginPage'
 import RegisterPage from '@/pages/RegisterPage'
+import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
+import ResetPasswordPage from '@/pages/ResetPasswordPage'
 import HomePage from '@/pages/HomePage'
 import Events from '@/pages/Events'
 import EventDetail from '@/pages/EventDetail'
@@ -30,6 +32,8 @@ import CreateNotification from '@/pages/admin/CreateNotification'
 import Notifications from '@/pages/Notifications'
 import NotificationDetail from '@/pages/NotificationDetail'
 import NotFoundPage from '@/pages/NotFoundPage'
+import VerifyEmailPage from '@/pages/VerifyEmailPage'
+import AccountPage from '@/pages/AccountPage'
 
 // Root wrap AuthProvider bên trong router context để useNavigate hoạt động
 function Root() {
@@ -50,6 +54,8 @@ const router = createBrowserRouter([
         children: [
           { path: 'login', element: <LoginPage /> },
           { path: 'register', element: <RegisterPage /> },
+          { path: 'forgot-password', element: <ForgotPasswordPage /> },
+          { path: 'reset-password', element: <ResetPasswordPage /> },
         ],
       },
       {
@@ -67,9 +73,12 @@ const router = createBrowserRouter([
           { path: 'contact', element: <Contact /> },
           { path: 'notifications', element: <Notifications /> },
           { path: 'notifications/:id', element: <NotificationDetail /> },
+          { path: 'account', element: <AccountPage /> },
           // ✏️ Thêm route mới tại đây
         ],
       },
+      { path: '/verify-email', element: <VerifyEmailPage /> },
+      { path: '/auth/verify-email', element: <VerifyEmailPage /> },
       {
         path: '/admin',
         element: <AdminLayout />,

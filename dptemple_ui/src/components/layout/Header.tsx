@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { cn } from '@/utils'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface NavItem {
   label: string
@@ -20,8 +21,8 @@ const navItems: NavItem[] = [
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const navigate = useNavigate()
+  const { isAuthenticated, logout } = useAuth()
 
   return (
     <nav className="bg-[#2d4a3e] sticky top-0 z-50 border-b border-[rgba(200,169,110,0.2)]">
@@ -63,14 +64,22 @@ export default function Header() {
 
         {/* Auth buttons (Desktop) */}
         <div className="hidden md:flex items-center gap-2">
-          {isLoggedIn ? (
+          {isAuthenticated ? (
+          <>
             <button
-              onClick={() => setIsLoggedIn(false)}
+              onClick={() => navigate('/account')}
+              className="text-xs tracking-wide px-4 py-1.5 rounded border border-white/30 text-[#ffffff] hover:bg-white/10 transition-colors"
+            >
+              Tài khoản
+            </button>
+            <button
+              onClick={logout}
               className="text-xs tracking-wide px-4 py-1.5 rounded border border-[#ffffff] text-[#ffffff] hover:bg-[#ffffff] hover:text-[#2d4a3e] transition-colors"
             >
               Đăng xuất
             </button>
-          ) : (
+          </>
+        ) : (
             <button
               onClick={() => navigate('/auth/login')}
               className="text-xs tracking-wide px-4 py-1.5 rounded bg-[#ffffff] text-[#2d4a3e] hover:bg-[#e8d5a3] transition-colors font-semibold"
@@ -120,13 +129,21 @@ export default function Header() {
 
           {/* Auth buttons (Mobile) */}
           <li className="px-6 pt-3 pb-1">
-            {isLoggedIn ? (
-              <button
-                onClick={() => { setIsLoggedIn(false); setMenuOpen(false) }}
-                className="w-full text-sm py-2 rounded border border-[#ffffff] text-[#ffffff] hover:bg-[#ffffff] hover:text-[#2d4a3e] transition-colors"
-              >
-                Đăng xuất
-              </button>
+            {isAuthenticated ? (
+              <>
+                <button
+                  onClick={() => { navigate('/account'); setMenuOpen(false) }}
+                  className="w-full text-sm py-2 rounded border border-white/30 text-[#ffffff] hover:bg-white/10 transition-colors"
+                >
+                  Tài khoản
+                </button>
+                <button
+                  onClick={() => { logout(); setMenuOpen(false) }}
+                  className="w-full text-sm py-2 rounded border border-[#ffffff] text-[#ffffff] hover:bg-[#ffffff] hover:text-[#2d4a3e] transition-colors"
+                >
+                  Đăng xuất
+                </button>
+              </>
             ) : (
               <button
                 onClick={() => { navigate('/auth/login'); setMenuOpen(false) }}

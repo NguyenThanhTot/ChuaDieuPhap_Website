@@ -1,5 +1,5 @@
 interface DharmaTalk {
-  id: number
+  id: string
   title: string
   speaker: string
   date: string

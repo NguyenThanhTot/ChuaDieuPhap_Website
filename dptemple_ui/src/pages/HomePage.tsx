@@ -21,7 +21,9 @@ function SectionHeader({ label, title, sub, light = false }: { label: string; ti
 }
 
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { useAuth } from '@/contexts/AuthContext'
 import { homepageService } from '@/services/homepageService'
 import type { HomepageDataDTO } from '@/types'
 
@@ -39,6 +41,8 @@ function MetaRow({ icon, label, value }: { icon: string; label: string; value: s
 
 export default function HomePage() {
   useDocumentTitle('Trang chủ - Chùa Diệu Pháp');
+  const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
 
   const [homepageData, setHomepageData] = useState<HomepageDataDTO | null>(null)
   const [loading, setLoading] = useState(true)
@@ -98,6 +102,32 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* THÔNG BÁO */}
+      <section className="bg-[#f5f0e8] py-20 px-6 md:px-12">
+        <SectionHeader
+          label="Tin tức"
+          title="THÔNG BÁO"
+          sub="Những thông báo quan trọng và cập nhật mới nhất từ chùa Diệu Pháp."
+        />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {(homepageData?.featuredNotifications || homepageData?.notifications || []).slice(0, isAuthenticated ? 3 : 2).map((notification) => (
+            <div key={notification.id} className="rounded-2xl border border-[#dde8da] p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+              <div className="text-xs uppercase tracking-[2px] text-[#7a9e7e] mb-3">Thông báo</div>
+              <h3 className="text-lg font-semibold text-[#2d4a3e] mb-3">{notification.title}</h3>
+              <p className="text-sm text-[#5a7060] leading-relaxed mb-4">
+                {isAuthenticated ? notification.content || 'Nội dung thông báo chưa có.' : 'Đăng nhập để xem nội dung đầy đủ thông báo.'}
+              </p>
+              <div className="text-xs text-[#7a9e7e] uppercase tracking-[3px]">Ưu tiên: {notification.homepagePriority ?? 0}</div>
+            </div>
+          ))}
+        </div>
+        {!isAuthenticated && (
+          <div className="mt-8 text-center">
+            <p className="text-sm text-[#5a7060]">Đăng nhập để xem thêm thông báo và nội dung chi tiết.</p>
+          </div>
+        )}
+      </section>
+
       {/* SỰ KIỆN */}
       <section className="bg-white py-20 px-6 md:px-12">
         <SectionHeader
@@ -106,7 +136,7 @@ export default function HomePage() {
           sub="Những sự kiện và hoạt động Phật pháp nổi bật, thường xuyên diễn ra tại chùa Diệu Pháp để bạn tham gia, trải nghiệm và nuôi dưỡng tâm linh."
         />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-          {(homepageData?.events || []).map((ev) => (
+          {(homepageData?.events || []).slice(0, isAuthenticated ? undefined : 2).map((ev) => (
             <div
               key={ev.id}
               className="rounded-2xl border border-[#dde8da] overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-300 bg-white"
@@ -125,14 +155,17 @@ export default function HomePage() {
                   <MetaRow icon="📅" label="Ngày diễn ra sự kiện" value={ev.startDate} />
                   <MetaRow icon="📋" label="Ngày kết thúc" value={ev.endDate} />
                   <MetaRow icon="⏰" label="Thời gian sự kiện" value={ev.eventTime || ''} />
-                  <MetaRow icon="📍" label="Địa điểm" value={ev.location || ''} />
+                  <MetaRow icon="📍" label="Địa điểm" value={isAuthenticated ? ev.location || '' : 'Đăng nhập để xem địa điểm'} />
                 </div>
+                {!isAuthenticated && (
+                  <p className="mt-4 text-sm text-[#7a9e7e]">Đăng nhập để xem chi tiết sự kiện đầy đủ.</p>
+                )}
               </div>
             </div>
           ))}
         </div>
         <div className="flex justify-center mt-10">
-          <button className="px-8 py-3 border-2 border-[#2d4a3e] text-[#2d4a3e] text-xs font-medium tracking-widest uppercase rounded-lg hover:bg-[#2d4a3e] hover:text-[#ffffff] transition-all duration-200">
+          <button onClick={() => navigate('/events')} className="px-8 py-3 border-2 border-[#2d4a3e] text-[#2d4a3e] text-xs font-medium tracking-widest uppercase rounded-lg hover:bg-[#2d4a3e] hover:text-[#ffffff] transition-all duration-200">
             Xem thêm sự kiện
           </button>
         </div>
@@ -147,7 +180,7 @@ export default function HomePage() {
           light
         />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-3xl mx-auto">
-          {(homepageData?.news || []).map((n) => (
+          {(homepageData?.news || []).slice(0, isAuthenticated ? undefined : 2).map((n) => (
             <div
               key={n.id}
               className="rounded-xl overflow-hidden border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.07)] hover:bg-[rgba(255,255,255,0.12)] transition-colors"
@@ -164,19 +197,22 @@ export default function HomePage() {
                   <div className="w-5 h-5 rounded-full bg-[#4a6741] flex items-center justify-center text-[9px] text-[#ffffff]">
                     ✿
                   </div>
-                  {n.authorName}
+                  {isAuthenticated ? n.authorName : 'Đăng nhập để xem tác giả'}
                 </div>
-                <a href="#" className="block text-right text-[10px] text-[#ffffff] mt-3 tracking-wide hover:underline">
-                  Đọc tiếp →
-                </a>
+                <p className="text-[12px] text-[rgba(232,235,228,0.7)] mt-3">
+                  {isAuthenticated ? 'Đọc tiếp để xem nội dung đầy đủ.' : 'Đăng nhập để xem nội dung đầy đủ bài viết.'}
+                </p>
               </div>
             </div>
           ))}
         </div>
-        <div className="flex justify-center mt-10">
-          <button className="px-8 py-3 border border-[rgba(200,169,110,0.6)] text-[#ffffff] text-xs font-medium tracking-widest uppercase rounded-lg hover:bg-[rgba(200,169,110,0.15)] transition-all duration-200">
+        <div className="flex flex-col items-center gap-4 mt-10">
+          <button onClick={() => navigate('/news')} className="px-8 py-3 border border-[rgba(200,169,110,0.6)] text-[#ffffff] text-xs font-medium tracking-widest uppercase rounded-lg hover:bg-[rgba(200,169,110,0.15)] transition-all duration-200">
             Xem tất cả bài viết
           </button>
+          {!isAuthenticated && (
+            <div className="text-sm text-[#5a7060]">Đăng nhập để xem thêm tin tức và bài viết chi tiết.</div>
+          )}
         </div>
       </section>
 
@@ -200,7 +236,7 @@ export default function HomePage() {
             <p className="text-sm text-[#5a7060] font-light leading-relaxed mb-7">
               {homepageData?.about?.introductionText || 'Tọa lạc yên bình tại vùng đất linh thiêng Đồng Nai, Chùa Diệu Pháp là không gian của sự bình yên và trí tuệ. Nơi đây hướng dẫn tu học và kết nối những tâm hồn tìm về với Phật pháp nhiệm màu. Ngôi chùa không chỉ là nơi thờ phụng mà còn là trung tâm văn hoá Phật giáo, nơi tổ chức nhiều khoá tu học và hoạt động cộng đồng ý nghĩa.'}
             </p>
-            <button className="px-7 py-3 bg-[#2d4a3e] text-[#ffffff] text-xs font-medium tracking-widest uppercase rounded-lg hover:bg-[#1a2e25] transition-colors">
+            <button onClick={() => navigate('/about')} className="px-7 py-3 bg-[#2d4a3e] text-[#ffffff] text-xs font-medium tracking-widest uppercase rounded-lg hover:bg-[#1a2e25] transition-colors">
               Khám phá chi tiết
             </button>
           </div>

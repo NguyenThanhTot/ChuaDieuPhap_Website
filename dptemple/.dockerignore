@@ -1,0 +1,48 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.idea
+*.iml
+*.ipr
+*.iws
+.vscode
+
+# Build output (will be built in container)
+target
+
+# Maven - KEEP wrapper files for container build
+# .mvn
+# mvnw
+# mvnw.cmd
+
+# Documentation
+HELP.md
+README.md
+*.md
+
+# Logs
+*.log
+logs
+
+# Test files
+src/test
+
+# Local environment files
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Database dump (large file)
+*.sql

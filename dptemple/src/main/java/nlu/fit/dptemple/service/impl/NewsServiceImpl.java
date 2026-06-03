@@ -68,8 +68,20 @@ public class NewsServiceImpl implements NewsService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<News> findHomepageNewsLimited() {
+        return newsRepository.findHomepageNewsLimited();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<News> findFeaturedNews() {
         return newsRepository.findFeaturedNews();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<News> findFeaturedNewsLimited() {
+        return newsRepository.findFeaturedNewsLimited();
     }
 
     @Override
