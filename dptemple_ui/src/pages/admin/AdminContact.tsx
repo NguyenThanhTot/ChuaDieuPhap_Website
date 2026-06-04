@@ -51,8 +51,8 @@ export default function AdminContact() {
         ])
 
         const allMessages = [
-          ...unreadResponse.data.content.map(mapMessageToContact),
-          ...readResponse.data.content.map(mapMessageToContact)
+          ...unreadResponse.content.map(mapMessageToContact),
+          ...readResponse.content.map(mapMessageToContact)
         ]
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 

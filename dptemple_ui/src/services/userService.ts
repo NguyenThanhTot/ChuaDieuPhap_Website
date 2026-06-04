@@ -11,7 +11,7 @@ export const userService = {
   // Get all active users with pagination
   findAllActive: (pageable: Pageable) =>
     axiosInstance
-      .get<ApiResponse<PageUserResponse>>('/users', { params: pageable })
+      .get<PageUserResponse>('/users', { params: pageable })
       .then((r) => r.data),
 
   // Create a new user
@@ -47,7 +47,7 @@ export const userService = {
   // Get all deleted users
   findAllDeleted: (pageable: Pageable) =>
     axiosInstance
-      .get<ApiResponse<PageUserResponse>>('/users/deleted', { params: pageable })
+      .get<PageUserResponse>('/users/deleted', { params: pageable })
       .then((r) => r.data),
 
   // Check if email exists

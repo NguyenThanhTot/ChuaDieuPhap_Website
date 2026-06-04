@@ -10,7 +10,7 @@ export const notificationService = {
   // Get all published notifications with pagination
   findAllPublished: (pageable: Pageable) =>
     axiosInstance
-      .get<ApiResponse<PageNotification>>('/notifications', { params: pageable })
+      .get<PageNotification>('/notifications', { params: pageable })
       .then((r) => r.data),
 
   // Create a new notification

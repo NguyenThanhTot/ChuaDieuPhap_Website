@@ -188,9 +188,9 @@ const Notifications: React.FC = () => {
                 size: 12
             }
             const response = await notificationService.findAllPublished(pageable)
-            if (response.data) {
-                setNotifications(response.data.content || [])
-                setTotalPages(response.data.totalPages || 1)
+            if (response) {
+                setNotifications(response.content || [])
+                setTotalPages(response.totalPages || 1)
             }
         } catch (error) {
             console.error('Failed to fetch notifications:', error)

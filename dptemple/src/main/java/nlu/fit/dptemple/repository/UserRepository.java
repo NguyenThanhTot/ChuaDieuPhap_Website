@@ -15,6 +15,8 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     Optional<User> findByEmailVerificationToken(String token);
 
+    Optional<User> findByPasswordResetToken(String token);
+
     boolean existsByEmail(String email);
 
     Page<User> findByIsActiveTrueAndDeletedAtIsNull(Pageable pageable);

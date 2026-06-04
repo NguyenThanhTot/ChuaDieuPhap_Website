@@ -35,9 +35,9 @@ export default function News() {
         size: 12
       }
       const response = await newsService.findAllPublished(pageable)
-      if (response.data) {
-        setNews(response.data.content || [])
-        setTotalPages(response.data.totalPages || 1)
+      if (response) {
+        setNews(response.content || [])
+        setTotalPages(response.totalPages || 1)
       }
     } catch (error) {
       console.error('Failed to fetch news:', error)

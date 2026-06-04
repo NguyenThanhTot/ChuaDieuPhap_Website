@@ -35,9 +35,9 @@ export default function Events() {
         size: 12
       }
       const response = await eventService.findAllPublished(pageable)
-      if (response.data) {
-        setEvents(response.data.content || [])
-        setTotalPages(response.data.totalPages || 1)
+      if (response) {
+        setEvents(response.content || [])
+        setTotalPages(response.totalPages || 1)
       }
     } catch (error) {
       console.error('Failed to fetch events:', error)

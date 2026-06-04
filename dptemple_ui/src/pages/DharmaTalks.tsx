@@ -68,9 +68,9 @@ export default function DharmaTalks() {
         size: 12
       }
       const response = await dharmaTalkService.findAllPublished(pageable)
-      if (response.data) {
-        setTalks(response.data.content?.map(mapDharmaTalk) || [])
-        setTotalPages(response.data.totalPages || 1)
+      if (response) {
+        setTalks(response.content?.map(mapDharmaTalk) || [])
+        setTotalPages(response.totalPages || 1)
       }
     } catch (error) {
       console.error('Failed to fetch dharma talks:', error)
@@ -275,92 +275,6 @@ export default function DharmaTalks() {
           </section>
         </>
       )}
-
-      {/* Regular Talks Grid */}
-      <section className="py-12 px-6 md:px-12">
-        <div className="max-w-6xl mx-auto">
-          <h2 
-            className="text-2xl font-semibold text-[#2d4a3e] mb-8"
-            style={{ fontFamily: "'Cormorant Garamond', 'Georgia', serif" }}
-          >
-            Tất cả bài giảng
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {regularTalks.map(talk => (
-              <div
-                key={talk.id}
-                onClick={() => handleTalkClick(talk)}
-                className="bg-white rounded-xl border border-[#dde8da] overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-300 cursor-pointer"
-              >
-                {/* Audio Visual */}
-                <div className="relative h-40 overflow-hidden bg-gradient-to-br from-[#2d4a3e] to-[#1a2e25] flex items-center justify-center">
-                  <div className="text-5xl text-white/20">🎙️</div>
-                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-medium text-[#2d4a3e]">
-                    {talk.category}
-                  </div>
-                  <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-medium text-[#2d4a3e]">
-                    ⏱️ {talk.duration}
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-5">
-                  <h3 className="text-sm font-semibold text-[#2d4a3e] uppercase tracking-wide mb-3 leading-snug">
-                    {talk.title}
-                  </h3>
-                  
-                  <p className="text-xs text-[#5a7060] mb-4 line-clamp-3">
-                    {talk.excerpt}
-                  </p>
-
-                  {/* Meta Info */}
-                  <div className="flex items-center justify-between text-xs text-[#5a7060] mb-3">
-                    <div className="flex items-center gap-3">
-                      <span>👤 {talk.speaker.split(' ').pop()}</span>
-                      <span>📅 {talk.date}</span>
-                    </div>
-                  </div>
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {talk.tags.slice(0, 2).map((tag, index) => (
-                      <span 
-                        key={index}
-                        className="bg-[#f5f0e8] text-[#2d4a3e] px-2 py-1 rounded text-xs"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                    {talk.tags.length > 2 && (
-                      <span className="bg-[#f5f0e8] text-[#2d4a3e] px-2 py-1 rounded text-xs">
-                        +{talk.tags.length - 2}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-[#5a7060]">👁️ {talk.views} lượt nghe</span>
-                    <button className="text-[#2d4a3e] hover:text-[#1a2e25] font-medium text-xs transition-colors">
-                      Nghe ngay →
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* No Results */}
-          {filteredTalks.length === 0 && (
-            <div className="text-center py-12">
-              <div className="text-4xl mb-4">🔍</div>
-              <h3 className="text-lg font-medium text-[#2d4a3e] mb-2">Không tìm thấy bài giảng</h3>
-              <p className="text-sm text-[#5a7060]">
-                Không có bài giảng nào phù hợp với tìm kiếm của bạn.
-              </p>
-            </div>
-          )}
-        </div>
-      </section>
 
       {/* Dharma Talk Detail Modal */}
       <DharmaTalkDetailModal
