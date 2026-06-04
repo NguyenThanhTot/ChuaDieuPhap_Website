@@ -21,7 +21,7 @@ export default function AdminNews() {
       try {
         setLoading(true)
         const response = await newsService.findAllPublished({ page: 0, size: 20, sort: ['publishedDate,desc'] })
-        setNewsItems(response.data.content)
+        setNewsItems(response.content)
       } catch (error) {
         console.error('Failed to load news:', error)
       } finally {

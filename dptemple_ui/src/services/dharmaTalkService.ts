@@ -8,9 +8,9 @@ import type {
 
 export const dharmaTalkService = {
   // Get all published dharma talks with pagination
-  findAllPublished: (pageable: Pageable) =>
+  findAllPublished: (pageable: Pageable): Promise<PageDharmaTalk> =>
     axiosInstance
-      .get<ApiResponse<PageDharmaTalk>>('/dharma-talks', { params: pageable })
+      .get<PageDharmaTalk>('/dharma-talks', { params: pageable })
       .then((r) => r.data),
 
   // Create a new dharma talk
@@ -46,6 +46,6 @@ export const dharmaTalkService = {
   // Get all deleted dharma talks
   findAllDeleted: (pageable: Pageable) =>
     axiosInstance
-      .get<ApiResponse<PageDharmaTalk>>('/dharma-talks/deleted', { params: pageable })
+      .get<PageDharmaTalk>('/dharma-talks/deleted', { params: pageable })
       .then((r) => r.data),
 }

@@ -25,8 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -39,8 +37,6 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
     private final EmailService emailService;
-
-    private final Map<String, String> resetTokens = new HashMap<>();
 
     @Override
     public UserResponse createUser(UserRequest request) {
@@ -214,25 +210,26 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", request.getEmail()));
 
         String resetToken = UUID.randomUUID().toString();
-        resetTokens.put(resetToken, user.getEmail());
+        user.setPasswordResetToken(resetToken);
+        user.setPasswordResetTokenExpiry(LocalDateTime.now().plusHours(1));
+        userRepository.save(user);
 
-        System.out.println("Password reset token for " + user.getEmail() + ": " + resetToken);
+        emailService.sendResetPasswordEmail(user.getEmail(), resetToken);
     }
 
     @Override
     public void resetPassword(ResetPasswordRequest request) {
-        String email = resetTokens.get(request.getToken());
-        if (email == null) {
-            throw new ResourceNotFoundException("Reset token", "token", "Invalid or expired token");
+        User user = userRepository.findByPasswordResetToken(request.getToken())
+                .orElseThrow(() -> new ResourceNotFoundException("Reset token", "token", "Invalid or expired token"));
+
+        if (user.getPasswordResetTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new ResourceNotFoundException("Reset token", "token", "Token has expired");
         }
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
-
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        user.setPasswordResetToken(null);
+        user.setPasswordResetTokenExpiry(null);
         userRepository.save(user);
-
-        resetTokens.remove(request.getToken());
     }
 
     @Override

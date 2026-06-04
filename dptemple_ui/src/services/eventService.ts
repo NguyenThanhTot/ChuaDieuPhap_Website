@@ -10,7 +10,7 @@ export const eventService = {
   // Get all published events with pagination
   findAllPublished: (pageable: Pageable) =>
     axiosInstance
-      .get<ApiResponse<PageEvent>>('/events', { params: pageable })
+      .get<PageEvent>('/events', { params: pageable })
       .then((r) => r.data),
 
   // Create a new event
@@ -58,6 +58,6 @@ export const eventService = {
   // Get all deleted events
   findAllDeleted: (pageable: Pageable) =>
     axiosInstance
-      .get<ApiResponse<PageEvent>>('/events/deleted', { params: pageable })
+      .get<PageEvent>('/events/deleted', { params: pageable })
       .then((r) => r.data),
 }

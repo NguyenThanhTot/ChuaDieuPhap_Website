@@ -69,6 +69,12 @@ public class User {
     @Column(name = "email_verification_token_expiry")
     private java.time.LocalDateTime emailVerificationTokenExpiry;
 
+    @Column(name = "password_reset_token", length = 255)
+    private String passwordResetToken;
+
+    @Column(name = "password_reset_token_expiry")
+    private java.time.LocalDateTime passwordResetTokenExpiry;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private User createdBy;

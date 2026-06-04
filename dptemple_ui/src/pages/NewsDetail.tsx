@@ -55,7 +55,7 @@ export default function NewsDetail() {
 
       try {
         const response = await newsService.findById(id)
-        setNews(mapNewsToUi(response.data))
+        setNews(mapNewsToUi(response))
       } catch (err) {
         console.error('Failed to load news item:', err)
         setError('Không thể tải tin tức. Vui lòng thử lại sau.')

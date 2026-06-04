@@ -30,7 +30,7 @@ export default function AdminNotifications() {
       try {
         setLoading(true)
         const response = await notificationService.findAllPublished({ page: 0, size: 20, sort: ['homepagePriority,desc'] })
-        setNotifications(response.data.content)
+        setNotifications(response.content)
       } catch (error) {
         console.error('Failed to load notifications:', error)
       } finally {

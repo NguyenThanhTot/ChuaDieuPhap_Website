@@ -26,9 +26,9 @@ export default function AdminEvents() {
     try {
       setLoading(true)
       const response = await eventService.findAllPublished({ page: pageIndex, size, sort: ['startDate,asc'] })
-      setEvents(response.data.content)
-      setTotalItems(response.data.totalElements || 0)
-      setTotalPages(response.data.totalPages || 1)
+      setEvents(response.content)
+      setTotalItems(response.totalElements || 0)
+      setTotalPages(response.totalPages || 1)
     } catch (error) {
       console.error('Failed to load events:', error)
     } finally {

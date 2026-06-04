@@ -40,12 +40,12 @@ export const messageService = {
   // Get unread messages with pagination
   findAllUnread: (pageable: Pageable) =>
     axiosInstance
-      .get<ApiResponse<PageMessage>>('/messages/unread/paged', { params: pageable })
+      .get<PageMessage>('/messages/unread/paged', { params: pageable })
       .then((r) => r.data),
 
   // Get read messages with pagination
   findAllRead: (pageable: Pageable) =>
     axiosInstance
-      .get<ApiResponse<PageMessage>>('/messages/read/paged', { params: pageable })
+      .get<PageMessage>('/messages/read/paged', { params: pageable })
       .then((r) => r.data),
 }

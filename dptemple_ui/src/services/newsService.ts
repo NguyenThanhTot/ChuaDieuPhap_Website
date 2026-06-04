@@ -10,7 +10,7 @@ export const newsService = {
   // Get all published news with pagination
   findAllPublished: (pageable: Pageable) =>
     axiosInstance
-      .get<ApiResponse<PageNews>>('/news', { params: pageable })
+      .get<PageNews>('/news', { params: pageable })
       .then((r) => r.data),
 
   // Create a new news article
@@ -22,7 +22,7 @@ export const newsService = {
   // Get news by ID
   findById: (id: string) =>
     axiosInstance
-      .get<ApiResponse<News>>(`/news/${id}`)
+      .get<News>(`/news/${id}`)
       .then((r) => r.data),
 
   // Update news
