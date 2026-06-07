@@ -23,6 +23,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -188,7 +190,17 @@ public class UserServiceImpl implements UserService {
 
         User saved = userRepository.save(user);
 
-        emailService.sendVerificationEmail(saved.getEmail(), verificationToken);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    emailService.sendVerificationEmail(saved.getEmail(), verificationToken);
+                }
+            });
+        } else {
+            // fallback: send immediately if no active transaction
+            emailService.sendVerificationEmail(saved.getEmail(), verificationToken);
+        }
 
         String token = tokenProvider.generateTokenFromUserId(saved.getId(), saved.getEmail(), saved.getRole().name());
 
@@ -214,7 +226,16 @@ public class UserServiceImpl implements UserService {
         user.setPasswordResetTokenExpiry(LocalDateTime.now().plusHours(1));
         userRepository.save(user);
 
-        emailService.sendResetPasswordEmail(user.getEmail(), resetToken);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    emailService.sendResetPasswordEmail(user.getEmail(), resetToken);
+                }
+            });
+        } else {
+            emailService.sendResetPasswordEmail(user.getEmail(), resetToken);
+        }
     }
 
     @Override
@@ -261,6 +282,15 @@ public class UserServiceImpl implements UserService {
         user.setEmailVerificationTokenExpiry(LocalDateTime.now().plusHours(24));
         userRepository.save(user);
 
-        emailService.sendVerificationEmail(user.getEmail(), verificationToken);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    emailService.sendVerificationEmail(user.getEmail(), verificationToken);
+                }
+            });
+        } else {
+            emailService.sendVerificationEmail(user.getEmail(), verificationToken);
+        }
     }
 }

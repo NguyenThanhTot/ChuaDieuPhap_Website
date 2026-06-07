@@ -22,7 +22,14 @@ const navItems: NavItem[] = [
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const navigate = useNavigate()
-  const { isAuthenticated, logout } = useAuth()
+  const { isAuthenticated, user, logout } = useAuth()
+
+  const visibleNavItems = navItems.filter((item) => {
+    if (item.path === '/admin') {
+      return isAuthenticated && user?.role === 'admin'
+    }
+    return true
+  })
 
   return (
     <nav className="bg-[#2d4a3e] sticky top-0 z-50 border-b border-[rgba(200,169,110,0.2)]">
@@ -43,7 +50,7 @@ export default function Header() {
 
         {/* Desktop menu */}
         <ul className="hidden md:flex gap-7">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <li key={item.path}>
               <NavLink
                 to={item.path}
@@ -108,7 +115,7 @@ export default function Header() {
       {/* Mobile menu */}
       {menuOpen && (
         <ul className="md:hidden flex flex-col py-2 border-t border-[rgba(200,169,110,0.2)]">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <li key={item.path}>
               <NavLink
                 to={item.path}
