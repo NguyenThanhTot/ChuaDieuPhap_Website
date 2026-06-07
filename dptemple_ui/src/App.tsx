@@ -3,6 +3,7 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import MainLayout from '@/components/layout/MainLayout'
 import AuthLayout from '@/components/layout/AuthLayout'
 import AdminLayout from '@/components/layout/AdminLayout'
+import AdminRoute from '@/components/common/AdminRoute'
 import LoginPage from '@/pages/LoginPage'
 import RegisterPage from '@/pages/RegisterPage'
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
@@ -86,7 +87,11 @@ const router = createBrowserRouter([
       { path: '/auth/verify-email', element: <VerifyEmailPage /> },
       {
         path: '/admin',
-        element: <AdminLayout />,
+        element: (
+          <AdminRoute>
+            <AdminLayout />
+          </AdminRoute>
+        ),
         children: [
           { index: true, element: <AdminDashboard /> },
           { path: 'events', element: <AdminEvents /> },
