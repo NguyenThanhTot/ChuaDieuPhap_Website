@@ -1,6 +1,5 @@
 import { axiosInstance } from '@/lib/axios'
 import type {
-  ApiResponse,
   UserResponse,
   UserRequest,
   PageUserResponse,
@@ -17,31 +16,31 @@ export const userService = {
   // Create a new user
   create: (data: UserRequest) =>
     axiosInstance
-      .post<ApiResponse<UserResponse>>('/users', data)
+      .post<UserResponse>('/users', data)
       .then((r) => r.data),
 
   // Get user by ID
   findById: (id: string) =>
     axiosInstance
-      .get<ApiResponse<UserResponse>>(`/users/${id}`)
+      .get<UserResponse>(`/users/${id}`)
       .then((r) => r.data),
 
   // Update user
   update: (id: string, data: Partial<UserRequest>) =>
     axiosInstance
-      .put<ApiResponse<UserResponse>>(`/users/${id}`, data)
+      .put<UserResponse>(`/users/${id}`, data)
       .then((r) => r.data),
 
   // Soft delete user
   delete: (id: string, deletedById: string) =>
     axiosInstance
-      .delete<ApiResponse<void>>(`/users/${id}`, { params: { deletedById } })
+      .delete<void>(`/users/${id}`, { params: { arg1: deletedById } })
       .then((r) => r.data),
 
   // Get user by email
   findByEmail: (email: string) =>
     axiosInstance
-      .get<ApiResponse<UserResponse>>(`/users/email/${email}`)
+      .get<UserResponse>(`/users/email/${email}`)
       .then((r) => r.data),
 
   // Get all deleted users
@@ -53,6 +52,6 @@ export const userService = {
   // Check if email exists
   checkEmail: (email: string) =>
     axiosInstance
-      .get<ApiResponse<Record<string, boolean>>>('/users/check-email', { params: { email } })
+      .get<Record<string, boolean>>('/users/check-email', { params: { arg0: email } })
       .then((r) => r.data),
 }

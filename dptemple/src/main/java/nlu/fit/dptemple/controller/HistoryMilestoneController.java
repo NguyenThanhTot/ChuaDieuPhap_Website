@@ -27,26 +27,26 @@ public class HistoryMilestoneController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing history milestone")
-    public ResponseEntity<HistoryMilestone> update(@PathVariable String id, @RequestBody HistoryMilestone milestone) {
+    public ResponseEntity<HistoryMilestone> update(@PathVariable("id") String id, @RequestBody HistoryMilestone milestone) {
         return ResponseEntity.ok(milestoneService.update(id, milestone));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a history milestone")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) {
         milestoneService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get history milestone by ID")
-    public ResponseEntity<HistoryMilestone> findById(@PathVariable String id) {
+    public ResponseEntity<HistoryMilestone> findById(@PathVariable("id") String id) {
         return ResponseEntity.ok(milestoneService.findById(id));
     }
 
     @GetMapping("/by-about/{aboutId}")
     @Operation(summary = "Get history milestones by about ID")
-    public ResponseEntity<List<HistoryMilestone>> findByAboutId(@PathVariable String aboutId) {
+    public ResponseEntity<List<HistoryMilestone>> findByAboutId(@PathVariable("aboutId") String aboutId) {
         return ResponseEntity.ok(milestoneService.findByAboutId(aboutId));
     }
 }

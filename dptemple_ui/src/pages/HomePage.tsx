@@ -51,7 +51,7 @@ export default function HomePage() {
     const fetchHomepageData = async () => {
       try {
         const response = await homepageService.getHomePageData()
-        setHomepageData(response.data)
+        setHomepageData(response)
       } catch (error) {
         console.error('Failed to fetch homepage data:', error)
         // Fallback to static data if API fails

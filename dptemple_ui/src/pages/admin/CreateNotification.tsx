@@ -1,10 +1,11 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import AdminHeader from '@/components/layout/AdminHeader'
 import AdminNavbar from '@/components/layout/AdminNavbar'
 import { useToast } from '@/components/common/Toast'
 import { notificationService } from '@/services/notificationService'
+import type { Notification } from '@/types'
 
 interface NotificationFormData {
   title: string
@@ -18,9 +19,13 @@ interface NotificationFormData {
 }
 
 export default function CreateNotification() {
-  useDocumentTitle('Tạo thông báo - Admin')
+  const { id } = useParams<{ id?: string }>()
+  const isEditMode = Boolean(id)
+
+  useDocumentTitle(isEditMode ? 'Chỉnh sửa thông báo - Admin' : 'Tạo thông báo - Admin')
   const navigate = useNavigate()
   const { success, error } = useToast()
+  const [isLoading, setIsLoading] = useState(false)
 
   const [formData, setFormData] = useState<NotificationFormData>({
     title: '',
@@ -35,6 +40,35 @@ export default function CreateNotification() {
 
   const [errors, setErrors] = useState<Partial<NotificationFormData>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!id) return
+
+    // Debug: log when edit mode initializes for notifications
+    // eslint-disable-next-line no-console
+    console.log('[CreateNotification] mount, id=', id)
+
+    setIsLoading(true)
+    notificationService.findById(id)
+      .then((notification) => {
+        setFormData({
+          title: notification.title,
+          content: notification.content,
+          type: notification.type ?? 'general',
+          targetAudience: notification.targetAudience ?? 'all',
+          isActive: notification.isPublished,
+          publishDate: notification.publishDate ?? new Date().toISOString().split('T')[0],
+          expiryDate: notification.expiryDate ?? '',
+          attachments: []
+        })
+      })
+      .catch((loadError) => {
+        console.error('Failed to load notification for edit:', loadError)
+        error('Không thể tải dữ liệu thông báo. Vui lòng thử lại.')
+        navigate('/admin/notifications')
+      })
+      .finally(() => setIsLoading(false))
+  }, [id, navigate])
 
   const handleInputChange = (field: keyof NotificationFormData, value: any) => {
     setFormData(prev => ({
@@ -72,26 +106,34 @@ export default function CreateNotification() {
     setIsSubmitting(true)
 
     try {
-      await notificationService.create({
+      const status: Notification['status'] = formData.isActive ? 'published' : 'draft'
+      const payload = {
         title: formData.title,
         content: formData.content,
         type: formData.type,
         targetAudience: formData.targetAudience,
         isActive: formData.isActive,
         isPublished: formData.isActive,
-        status: formData.isActive ? 'published' : 'draft',
+        status,
         publishDate: formData.publishDate,
         expiryDate: formData.expiryDate || undefined,
         isFeatured: false,
         homepagePriority: 0,
         attachments: formData.attachments.length
-      })
+      }
 
-      success('Thông báo đã được tạo thành công')
+      if (isEditMode && id) {
+        await notificationService.update(id, payload)
+        success('Thông báo đã được cập nhật thành công')
+      } else {
+        await notificationService.create(payload)
+        success('Thông báo đã được tạo thành công')
+      }
+
       navigate('/admin/notifications')
     } catch (submitError) {
-      console.error('Failed to create notification:', submitError)
-      error('Tạo thông báo thất bại. Vui lòng thử lại.')
+      console.error('Failed to save notification:', submitError)
+      error(isEditMode ? 'Cập nhật thông báo thất bại. Vui lòng thử lại.' : 'Tạo thông báo thất bại. Vui lòng thử lại.')
     } finally {
       setIsSubmitting(false)
     }
@@ -126,6 +168,14 @@ export default function CreateNotification() {
     { value: 'ban_to_chuc', label: 'Ban tổ chức' }
   ]
 
+  if (isEditMode && isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-700">Đang tải dữ liệu thông báo...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
@@ -143,8 +193,12 @@ export default function CreateNotification() {
             <div className="p-6 border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-800">Tạo thông báo</h1>
-                  <p className="text-gray-600 mt-1">Điền thông tin để tạo thông báo mới</p>
+                  <h1 className="text-2xl font-bold text-gray-800">
+                    {isEditMode ? 'Chỉnh sửa thông báo' : 'Tạo thông báo'}
+                  </h1>
+                  <p className="text-gray-600 mt-1">
+                    {isEditMode ? 'Cập nhật thông tin thông báo' : 'Điền thông tin để tạo thông báo mới'}
+                  </p>
                 </div>
                 <button
                   onClick={() => navigate('/admin/notifications')}
@@ -316,7 +370,7 @@ export default function CreateNotification() {
                   disabled={isSubmitting}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? 'Đang tạo...' : 'Tạo thông báo'}
+                  {isSubmitting ? (isEditMode ? 'Đang cập nhật...' : 'Đang tạo...') : (isEditMode ? 'Cập nhật thông báo' : 'Tạo thông báo')}
                 </button>
               </div>
             </form>

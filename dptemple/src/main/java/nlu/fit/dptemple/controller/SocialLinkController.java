@@ -27,20 +27,20 @@ public class SocialLinkController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing social link")
-    public ResponseEntity<SocialLink> update(@PathVariable String id, @RequestBody SocialLink socialLink) {
+    public ResponseEntity<SocialLink> update(@PathVariable("id") String id, @RequestBody SocialLink socialLink) {
         return ResponseEntity.ok(socialLinkService.update(id, socialLink));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a social link")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) {
         socialLinkService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get social link by ID")
-    public ResponseEntity<SocialLink> findById(@PathVariable String id) {
+    public ResponseEntity<SocialLink> findById(@PathVariable("id") String id) {
         return ResponseEntity.ok(socialLinkService.findById(id));
     }
 

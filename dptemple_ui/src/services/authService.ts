@@ -1,5 +1,5 @@
 import { axiosInstance } from '@/lib/axios'
-import type { ApiResponse, LoginRequest, LoginResponse, RegisterRequest, ForgetPasswordRequest, ResetPasswordRequest } from '@/types'
+import type { ApiResponse, LoginRequest, LoginResponse, RegisterRequest, ForgetPasswordRequest, ResetPasswordRequest, UserResponse } from '@/types'
 
 export const authService = {
   login: (data: LoginRequest) =>
@@ -14,12 +14,12 @@ export const authService = {
 
   resendVerificationEmail: (email: string) =>
     axiosInstance
-      .post<ApiResponse<void>>('/auth/resend-verification', null, { params: { email } })
+      .post<ApiResponse<void>>('/auth/resend-verification', null, { params: { arg0: email } })
       .then((r) => r.data),
 
   verifyEmail: (token: string) =>
     axiosInstance
-      .post<ApiResponse<void>>('/auth/verify-email', null, { params: { token } })
+      .post<ApiResponse<void>>('/auth/verify-email', null, { params: { arg0: token } })
       .then((r) => r.data),
 
   forgetPassword: (data: ForgetPasswordRequest) =>
@@ -33,8 +33,12 @@ export const authService = {
       .then((r) => r.data),
 
   logout: () =>
-    axiosInstance.post('/auth/logout').then((r) => r.data),
+    axiosInstance
+      .post<ApiResponse<void>>('/auth/logout')
+      .then((r) => r.data),
 
   getProfile: () =>
-    axiosInstance.get('/auth/me').then((r) => r.data),
+    axiosInstance
+      .get<ApiResponse<UserResponse>>('/auth/me')
+      .then((r) => r.data),
 }

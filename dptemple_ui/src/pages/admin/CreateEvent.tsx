@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import AdminHeader from '@/components/layout/AdminHeader'
 import AdminNavbar from '@/components/layout/AdminNavbar'
@@ -30,9 +30,13 @@ interface EventFormData {
 }
 
 export default function CreateEvent() {
-  useDocumentTitle('Tạo Sự kiện - Admin')
+  const { id } = useParams<{ id?: string }>()
+  const isEditMode = Boolean(id)
+
+  useDocumentTitle(isEditMode ? 'Chỉnh sửa Sự kiện - Admin' : 'Tạo Sự kiện - Admin')
   const navigate = useNavigate()
   const { success, error } = useToast()
+  const [isLoading, setIsLoading] = useState(false)
 
   const [formData, setFormData] = useState<EventFormData>({
     title: '',
@@ -59,6 +63,44 @@ export default function CreateEvent() {
 
   const [errors, setErrors] = useState<Partial<Omit<EventFormData, 'imageFile'> & { imageFile: string }>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!id) return
+
+    setIsLoading(true)
+    eventService.findById(id)
+      .then((eventData) => {
+        const [startTime, endTime] = eventData.eventTime?.split(' - ') ?? ['08:00', '17:00']
+        setFormData({
+          title: eventData.title || '',
+          eventType: '',
+          eventCode: '',
+          location: eventData.location || '',
+          capacity: '',
+          registrationFee: '',
+          registrationStartDate: '',
+          registrationEndDate: '',
+          eventStartDate: eventData.startDate || '',
+          eventEndDate: eventData.endDate || '',
+          startTime: startTime || '08:00',
+          endTime: endTime || '17:00',
+          isActive: eventData.isPublished,
+          isPinned: eventData.isFeatured,
+          requiresEmailVerification: false,
+          imageUploadMethod: eventData.imageUrl ? 'url' : 'file',
+          imageUrl: eventData.imageUrl || '',
+          imageFile: null,
+          description: eventData.description || '',
+          speaker: ''
+        })
+      })
+      .catch((loadError) => {
+        console.error('Failed to load event for edit:', loadError)
+        error('Không thể tải dữ liệu sự kiện. Vui lòng thử lại.')
+        navigate('/admin/events')
+      })
+      .finally(() => setIsLoading(false))
+  }, [id, navigate])
 
   const handleInputChange = (field: keyof EventFormData, value: any) => {
     setFormData(prev => ({
@@ -126,23 +168,40 @@ export default function CreateEvent() {
 
     try {
       const imageUrl = formData.imageUploadMethod === 'url' ? formData.imageUrl.trim() : ''
-      await eventService.create({
-        title: formData.title,
-        imageUrl: imageUrl || undefined,
-        startDate: formData.eventStartDate,
-        endDate: formData.eventEndDate,
-        eventTime: `${formData.startTime} - ${formData.endTime}`,
-        location: formData.location,
-        description: formData.description,
-        isFeatured: formData.isPinned,
-        isPublished: formData.isActive
-      })
+      if (isEditMode && id) {
+        await eventService.update(id, {
+          title: formData.title,
+          imageUrl: imageUrl || undefined,
+          startDate: formData.eventStartDate,
+          endDate: formData.eventEndDate,
+          eventTime: `${formData.startTime} - ${formData.endTime}`,
+          location: formData.location,
+          description: formData.description,
+          isFeatured: formData.isPinned,
+          isPublished: formData.isActive
+        })
 
-      success('Sự kiện đã được tạo thành công')
+        success('Sự kiện đã được cập nhật thành công')
+      } else {
+        await eventService.create({
+          title: formData.title,
+          imageUrl: imageUrl || undefined,
+          startDate: formData.eventStartDate,
+          endDate: formData.eventEndDate,
+          eventTime: `${formData.startTime} - ${formData.endTime}`,
+          location: formData.location,
+          description: formData.description,
+          isFeatured: formData.isPinned,
+          isPublished: formData.isActive
+        })
+
+        success('Sự kiện đã được tạo thành công')
+      }
+
       navigate('/admin/events')
     } catch (submitError) {
-      console.error('Failed to create event:', submitError)
-      error('Tạo sự kiện thất bại. Vui lòng thử lại.')
+      console.error('Failed to save event:', submitError)
+      error(isEditMode ? 'Cập nhật sự kiện thất bại. Vui lòng thử lại.' : 'Tạo sự kiện thất bại. Vui lòng thử lại.')
     } finally {
       setIsSubmitting(false)
     }
@@ -172,6 +231,14 @@ export default function CreateEvent() {
     return `${hour}:00`
   })
 
+  if (isEditMode && isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-700">Đang tải dữ liệu sự kiện...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
@@ -189,8 +256,12 @@ export default function CreateEvent() {
             <div className="p-6 border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-800">Tạo Sự kiện Mới</h1>
-                  <p className="text-gray-600 mt-1">Điền thông tin để tạo sự kiện mới</p>
+                  <h1 className="text-2xl font-bold text-gray-800">
+                    {isEditMode ? 'Chỉnh sửa sự kiện' : 'Tạo sự kiện mới'}
+                  </h1>
+                  <p className="text-gray-600 mt-1">
+                    {isEditMode ? 'Cập nhật thông tin sự kiện' : 'Điền thông tin để tạo sự kiện mới'}
+                  </p>
                 </div>
                 <button
                   onClick={() => navigate('/admin/events')}
@@ -520,7 +591,7 @@ export default function CreateEvent() {
                   disabled={isSubmitting}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? 'Đang tạo...' : 'Tạo sự kiện'}
+                  {isSubmitting ? (isEditMode ? 'Đang cập nhật...' : 'Đang tạo...') : (isEditMode ? 'Cập nhật sự kiện' : 'Tạo sự kiện')}
                 </button>
               </div>
             </form>

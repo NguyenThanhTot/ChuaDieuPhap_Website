@@ -6,7 +6,6 @@ import {
   useCallback,
   ReactNode,
 } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { authService } from '@/services/authService'
 import type { User, LoginRequest, AuthContextType } from '@/types'
 
@@ -35,15 +34,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return token
   })
   const [isLoading, setIsLoading] = useState(false)
-  const navigate = useNavigate()
 
   const isAuthenticated = !!accessToken && !!user
 
   const login = useCallback(async (data: LoginRequest) => {
     setIsLoading(true)
     try {
-      const res = await authService.login(data)
-      const loginData = res.data
+      const loginData = await authService.login(data)
       const authenticatedUser: User = {
         id: loginData.id,
         fullName: loginData.fullName,
@@ -59,25 +56,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('user', JSON.stringify(authenticatedUser))
       setUser(authenticatedUser)
       setAccessToken(loginData.token)
-      navigate('/home')
+      window.location.href = '/home'
     } finally {
       setIsLoading(false)
     }
-  }, [navigate])
+  }, [])
 
   const logout = useCallback(async () => {
-    try {
-      await authService.logout()
-    } catch {
-      // ignore logout errors and clear local state anyway
-    }
-
     localStorage.removeItem('accessToken')
     localStorage.removeItem('user')
     setUser(null)
     setAccessToken(null)
-    navigate('/auth/login')
-  }, [navigate])
+
+    try {
+      await authService.logout()
+    } catch {
+      // ignore logout errors after clearing local state
+    }
+
+    window.location.href = '/auth/login'
+  }, [])
 
   // Sync khi localStorage thay đổi từ tab khác
   useEffect(() => {

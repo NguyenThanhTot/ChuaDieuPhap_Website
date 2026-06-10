@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import AdminHeader from '@/components/layout/AdminHeader'
 import AdminNavbar from '@/components/layout/AdminNavbar'
@@ -19,9 +19,13 @@ interface NewsFormData {
 }
 
 export default function CreateNews() {
-  useDocumentTitle('Tạo tin tức - Admin')
+  const { id } = useParams<{ id?: string }>()
+  const isEditMode = Boolean(id)
+
+  useDocumentTitle(isEditMode ? 'Chỉnh sửa tin tức - Admin' : 'Tạo tin tức - Admin')
   const navigate = useNavigate()
   const { success, error } = useToast()
+  const [isLoading, setIsLoading] = useState(false)
 
   const [formData, setFormData] = useState<NewsFormData>({
     isActive: true,
@@ -37,6 +41,36 @@ export default function CreateNews() {
 
   const [errors, setErrors] = useState<Partial<Omit<NewsFormData, 'imageFile'> & { imageFile: string }>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!id) return
+
+    // Debug: log when edit page mounts and the id being requested
+    // eslint-disable-next-line no-console
+    console.log('[CreateNews] mount, id=', id)
+
+    setIsLoading(true)
+    newsService.findById(id)
+      .then((news) => {
+        setFormData({
+          isActive: news.isPublished,
+          title: news.title,
+          newsType: '',
+          author: news.author?.fullName ?? '',
+          tags: '',
+          imageUploadMethod: news.thumbnailUrl ? 'url' : 'file',
+          imageUrl: news.thumbnailUrl || '',
+          imageFile: null,
+          content: news.content
+        })
+      })
+      .catch((loadError) => {
+        console.error('Failed to load news for edit:', loadError)
+        error('Không thể tải dữ liệu tin tức. Vui lòng thử lại.')
+        navigate('/admin/news')
+      })
+      .finally(() => setIsLoading(false))
+  }, [id, navigate])
 
   const handleInputChange = (field: keyof NewsFormData, value: any) => {
     setFormData(prev => ({
@@ -84,19 +118,31 @@ export default function CreateNews() {
 
     try {
       const thumbnailUrl = formData.imageUploadMethod === 'url' ? formData.imageUrl.trim() : ''
-      await newsService.create({
-        title: formData.title,
-        content: formData.content,
-        thumbnailUrl: thumbnailUrl || undefined,
-        isPublished: formData.isActive,
-        isFeatured: false
-      })
+      if (isEditMode && id) {
+        await newsService.update(id, {
+          title: formData.title,
+          content: formData.content,
+          thumbnailUrl: thumbnailUrl || undefined,
+          isPublished: formData.isActive,
+          isFeatured: false
+        })
+        success('Tin tức đã được cập nhật thành công')
+      } else {
+        await newsService.create({
+          title: formData.title,
+          content: formData.content,
+          thumbnailUrl: thumbnailUrl || undefined,
+          isPublished: formData.isActive,
+          isFeatured: false,
+          publishedDate: new Date().toISOString()
+        })
+        success('Tin tức đã được tạo thành công')
+      }
 
-      success('Tin tức đã được tạo thành công')
       navigate('/admin/news')
     } catch (submitError) {
-      console.error('Failed to create news:', submitError)
-      error('Tạo tin tức thất bại. Vui lòng thử lại.')
+      console.error('Failed to save news:', submitError)
+      error(isEditMode ? 'Cập nhật tin tức thất bại. Vui lòng thử lại.' : 'Tạo tin tức thất bại. Vui lòng thử lại.')
     } finally {
       setIsSubmitting(false)
     }
@@ -129,6 +175,14 @@ export default function CreateNews() {
     'Thông báo'
   ]
 
+  if (isEditMode && isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-700">Đang tải dữ liệu tin tức...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
@@ -146,8 +200,12 @@ export default function CreateNews() {
             <div className="p-6 border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-800">Tạo tin tức</h1>
-                  <p className="text-gray-600 mt-1">Điền thông tin để tạo tin tức mới</p>
+                  <h1 className="text-2xl font-bold text-gray-800">
+                    {isEditMode ? 'Chỉnh sửa tin tức' : 'Tạo tin tức'}
+                  </h1>
+                  <p className="text-gray-600 mt-1">
+                    {isEditMode ? 'Cập nhật thông tin tin tức' : 'Điền thông tin để tạo tin tức mới'}
+                  </p>
                 </div>
                 <button
                   onClick={() => navigate('/admin/news')}
@@ -384,7 +442,7 @@ export default function CreateNews() {
                   disabled={isSubmitting}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? 'Đang lưu...' : 'Lưu'}
+                  {isSubmitting ? (isEditMode ? 'Đang cập nhật...' : 'Đang tạo...') : (isEditMode ? 'Cập nhật tin tức' : 'Tạo tin tức')}
                 </button>
               </div>
             </form>

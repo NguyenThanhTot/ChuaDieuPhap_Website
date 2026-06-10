@@ -16,10 +16,9 @@ export interface PaginatedData<T> {
 
 export interface PaginationParams {
   page?: number
-  pageSize?: number
+  size?: number
   search?: string
-  sortBy?: string
-  sortOrder?: 'asc' | 'desc'
+  sort?: string[]
 }
 
 // Auth
@@ -50,7 +49,7 @@ export interface UserRequest {
   gender?: 'male' | 'female' | 'other'
   occupation?: string
   address?: string
-  role: 'admin' | 'moderator' | 'member'
+  role: 'admin' | 'user'
   avatarUrl?: string
   isActive?: boolean
 }
@@ -65,7 +64,7 @@ export interface UserResponse {
   gender?: 'male' | 'female' | 'other'
   occupation?: string
   address?: string
-  role: 'admin' | 'moderator' | 'member' | 'user'
+  role: 'admin' | 'user'
   avatarUrl?: string
   isActive: boolean
   createdAt: string
@@ -83,7 +82,7 @@ export interface LoginResponse {
   fullName: string
   dharmaName?: string
   email: string
-  role: 'admin' | 'moderator' | 'member' | 'user'
+  role: 'admin' | 'user'
   avatarUrl?: string
   loginTime: string
 }
@@ -92,6 +91,7 @@ export interface RegisterRequest {
   fullName: string
   email: string
   password: string
+  role: 'admin' | 'user'
   dharmaName?: string
   phone?: string
   occupation?: string
@@ -151,7 +151,7 @@ export interface News {
   id: string
   title: string
   publishedDate: string
-  author: User
+  author?: User | null
   thumbnailUrl?: string
   content: string
   isFeatured: boolean

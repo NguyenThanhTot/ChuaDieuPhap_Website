@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 
 interface ToastProps {
   message: string
@@ -119,42 +119,48 @@ export function useToast() {
     duration?: number
   }>>([])
 
-  const addToast = (
-    message: string,
-    type: 'success' | 'error' | 'warning' | 'info',
-    duration?: number
-  ) => {
-    const id = Date.now().toString()
-    const newToast = { id, message, type, duration }
-    
-    setToasts(prev => [...prev, newToast])
-    
-    // Auto remove after duration
-    if (duration !== 0) {
-      setTimeout(() => {
-        setToasts(prev => prev.filter(toast => toast.id !== id))
-      }, duration || 3000)
-    }
-    
-    return id
-  }
+  const addToast = useCallback(
+    (
+      message: string,
+      type: 'success' | 'error' | 'warning' | 'info',
+      duration?: number
+    ) => {
+      const id = Date.now().toString()
+      const newToast = { id, message, type, duration }
+      
+      setToasts(prev => [...prev, newToast])
+      
+      // Auto remove after duration
+      if (duration !== 0) {
+        setTimeout(() => {
+          setToasts(prev => prev.filter(toast => toast.id !== id))
+        }, duration || 3000)
+      }
+      
+      return id
+    },
+    []
+  )
 
-  const removeToast = (id: string) => {
+  const removeToast = useCallback((id: string) => {
     setToasts(prev => prev.filter(toast => toast.id !== id))
-  }
+  }, [])
 
-  const success = (message: string, duration?: number) => addToast(message, 'success', duration)
-  const error = (message: string, duration?: number) => addToast(message, 'error', duration)
-  const warning = (message: string, duration?: number) => addToast(message, 'warning', duration)
-  const info = (message: string, duration?: number) => addToast(message, 'info', duration)
+  const success = useCallback((message: string, duration?: number) => addToast(message, 'success', duration), [addToast])
+  const error = useCallback((message: string, duration?: number) => addToast(message, 'error', duration), [addToast])
+  const warning = useCallback((message: string, duration?: number) => addToast(message, 'warning', duration), [addToast])
+  const info = useCallback((message: string, duration?: number) => addToast(message, 'info', duration), [addToast])
 
-  return {
-    toasts,
-    addToast,
-    removeToast,
-    success,
-    error,
-    warning,
-    info
-  }
+  return useMemo(
+    () => ({
+      toasts,
+      addToast,
+      removeToast,
+      success,
+      error,
+      warning,
+      info
+    }),
+    [toasts, addToast, removeToast, success, error, warning, info]
+  )
 }

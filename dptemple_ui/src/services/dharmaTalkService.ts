@@ -1,6 +1,5 @@
 import { axiosInstance } from '@/lib/axios'
 import type {
-  ApiResponse,
   DharmaTalk,
   PageDharmaTalk,
   Pageable
@@ -16,25 +15,25 @@ export const dharmaTalkService = {
   // Create a new dharma talk
   create: (data: Omit<DharmaTalk, 'id' | 'createdAt' | 'updatedAt'>) =>
     axiosInstance
-      .post<ApiResponse<DharmaTalk>>('/dharma-talks', data)
+      .post<DharmaTalk>('/dharma-talks', data)
       .then((r) => r.data),
 
   // Get dharma talk by ID
   findById: (id: string) =>
     axiosInstance
-      .get<ApiResponse<DharmaTalk>>(`/dharma-talks/${id}`)
+      .get<DharmaTalk>(`/dharma-talks/${id}`)
       .then((r) => r.data),
 
   // Update dharma talk
   update: (id: string, data: Partial<DharmaTalk>) =>
     axiosInstance
-      .put<ApiResponse<DharmaTalk>>(`/dharma-talks/${id}`, data)
+      .put<DharmaTalk>(`/dharma-talks/${id}`, data)
       .then((r) => r.data),
 
   // Soft delete dharma talk
   delete: (id: string, deletedById: string) =>
     axiosInstance
-      .delete<ApiResponse<void>>(`/dharma-talks/${id}`, { params: { deletedById } })
+      .delete<void>(`/dharma-talks/${id}`, { params: { arg1: deletedById } })
       .then((r) => r.data),
 
   // Get homepage dharma talks

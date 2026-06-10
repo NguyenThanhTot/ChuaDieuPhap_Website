@@ -29,20 +29,20 @@ public class DharmaTalkController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing dharma talk")
-    public ResponseEntity<DharmaTalk> update(@PathVariable String id, @RequestBody DharmaTalk dharmaTalk) {
+    public ResponseEntity<DharmaTalk> update(@PathVariable("id") String id, @RequestBody DharmaTalk dharmaTalk) {
         return ResponseEntity.ok(dharmaTalkService.update(id, dharmaTalk));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Soft delete a dharma talk")
-    public ResponseEntity<Void> delete(@PathVariable String id, @RequestParam String deletedById) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id, @RequestParam("deletedById") String deletedById) {
         dharmaTalkService.delete(id, deletedById);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get dharma talk by ID")
-    public ResponseEntity<DharmaTalk> findById(@PathVariable String id) {
+    public ResponseEntity<DharmaTalk> findById(@PathVariable("id") String id) {
         return dharmaTalkService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

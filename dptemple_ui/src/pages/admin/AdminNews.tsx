@@ -44,7 +44,7 @@ export default function AdminNews() {
 
   const filteredNews = newsItems.filter((item) =>
     item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.author.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+    item.author?.fullName?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const getStatusColor = (isPublished: boolean) =>
@@ -156,7 +156,7 @@ export default function AdminNews() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{item.title}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.author.fullName}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.author?.fullName || 'Tác giả ẩn danh'}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.publishedDate?.slice(0, 10) || '-'}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{getPriorityLabel(item)}</td>
                       <td className="px-6 py-4 whitespace-nowrap">

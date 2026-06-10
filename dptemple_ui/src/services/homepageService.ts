@@ -5,6 +5,6 @@ export const homepageService = {
   // Get all homepage data
   getHomePageData: () =>
     axiosInstance
-      .get<ApiResponse<HomepageDataDTO>>('/homepage')
+      .get<HomepageDataDTO>('/homepage')
       .then((r) => r.data),
 }

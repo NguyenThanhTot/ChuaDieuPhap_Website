@@ -29,20 +29,20 @@ public class NotificationController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing notification")
-    public ResponseEntity<Notification> update(@PathVariable String id, @RequestBody Notification notification) {
+    public ResponseEntity<Notification> update(@PathVariable("id") String id, @RequestBody Notification notification) {
         return ResponseEntity.ok(notificationService.update(id, notification));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Soft delete a notification")
-    public ResponseEntity<Void> delete(@PathVariable String id, @RequestParam String deletedById) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id, @RequestParam("deletedById") String deletedById) {
         notificationService.delete(id, deletedById);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get notification by ID")
-    public ResponseEntity<Notification> findById(@PathVariable String id) {
+    public ResponseEntity<Notification> findById(@PathVariable("id") String id) {
         return notificationService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

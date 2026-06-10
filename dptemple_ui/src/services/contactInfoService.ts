@@ -1,5 +1,5 @@
 import { axiosInstance } from '@/lib/axios'
-import type { ApiResponse, ContactInfo } from '@/types'
+import type { ContactInfo } from '@/types'
 
 export const contactInfoService = {
   // Get all active contact info
@@ -11,19 +11,19 @@ export const contactInfoService = {
   // Create a new contact info
   create: (data: Omit<ContactInfo, 'id' | 'createdAt' | 'updatedAt'>) =>
     axiosInstance
-      .post<ApiResponse<ContactInfo>>('/contact-info', data)
+      .post<ContactInfo>('/contact-info', data)
       .then((r) => r.data),
 
   // Get contact info by ID
   findById: (id: string) =>
     axiosInstance
-      .get<ApiResponse<ContactInfo>>(`/contact-info/${id}`)
+      .get<ContactInfo>(`/contact-info/${id}`)
       .then((r) => r.data),
 
   // Update contact info
   update: (id: string, data: Partial<ContactInfo>) =>
     axiosInstance
-      .put<ApiResponse<ContactInfo>>(`/contact-info/${id}`, data)
+      .put<ContactInfo>(`/contact-info/${id}`, data)
       .then((r) => r.data),
 
   // Delete contact info

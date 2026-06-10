@@ -27,20 +27,20 @@ public class ContactInfoController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing contact info")
-    public ResponseEntity<ContactInfo> update(@PathVariable String id, @RequestBody ContactInfo contactInfo) {
+    public ResponseEntity<ContactInfo> update(@PathVariable("id") String id, @RequestBody ContactInfo contactInfo) {
         return ResponseEntity.ok(contactInfoService.update(id, contactInfo));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a contact info")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) {
         contactInfoService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get contact info by ID")
-    public ResponseEntity<ContactInfo> findById(@PathVariable String id) {
+    public ResponseEntity<ContactInfo> findById(@PathVariable("id") String id) {
         return ResponseEntity.ok(contactInfoService.findById(id));
     }
 
