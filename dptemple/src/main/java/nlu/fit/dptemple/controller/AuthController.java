@@ -54,21 +54,27 @@ public class AuthController {
 
     @PostMapping("/verify-email")
     @Operation(summary = "Verify email with token")
-    public ResponseEntity<ApiResponse<Void>> verifyEmail(@RequestParam String token) {
+    public ResponseEntity<ApiResponse<Void>> verifyEmail(@RequestParam("token") String token) {
         userService.verifyEmail(token);
         return ResponseEntity.ok(ApiResponse.success("Email verified successfully", null));
     }
 
     @PostMapping("/resend-verification")
     @Operation(summary = "Resend verification email")
-    public ResponseEntity<ApiResponse<Void>> resendVerificationEmail(@RequestParam String email) {
+    public ResponseEntity<ApiResponse<Void>> resendVerificationEmail(@RequestParam("email") String email) {
         userService.resendVerificationEmail(email);
         return ResponseEntity.ok(ApiResponse.success("Verification email sent", null));
     }
 
+    @PostMapping("/logout")
+    @Operation(summary = "Logout user")
+    public ResponseEntity<ApiResponse<Void>> logout() {
+        return ResponseEntity.ok(ApiResponse.success("Logout successful", null));
+    }
+
     @PutMapping("/profile/{id}")
     @Operation(summary = "Update user profile")
-    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(@PathVariable String id, @Valid @RequestBody UserProfileUpdateRequest request) {
+    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(@PathVariable("id") String id, @Valid @RequestBody UserProfileUpdateRequest request) {
         UserResponse updated = userService.updateUserProfile(id, request);
         return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", updated));
     }

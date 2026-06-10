@@ -29,20 +29,20 @@ public class MessageController {
 
     @PutMapping("/{id}/mark-read")
     @Operation(summary = "Mark message as read")
-    public ResponseEntity<Message> markAsRead(@PathVariable String id) {
+    public ResponseEntity<Message> markAsRead(@PathVariable("id") String id) {
         return ResponseEntity.ok(messageService.markAsRead(id));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a message")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) {
         messageService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get message by ID")
-    public ResponseEntity<Message> findById(@PathVariable String id) {
+    public ResponseEntity<Message> findById(@PathVariable("id") String id) {
         return ResponseEntity.ok(messageService.findById(id));
     }
 

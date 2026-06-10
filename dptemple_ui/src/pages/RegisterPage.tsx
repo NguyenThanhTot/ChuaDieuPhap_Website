@@ -1,4 +1,5 @@
 import { useState, FormEvent } from 'react'
+import axios from 'axios'
 import { Link } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { authService } from '@/services/authService'
@@ -10,7 +11,8 @@ export default function RegisterPage() {
     dharmaName: '',
     email: '',
     password: '',
-    phone: ''
+    phone: '',
+    role: 'user'
   })
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -54,12 +56,17 @@ export default function RegisterPage() {
         dharmaName: '',
         email: '',
         password: '',
-        phone: ''
+        phone: '',
+        role: 'user'
       })
       setConfirmPassword('')
     } catch (err) {
       console.error(err)
-      setError('Đăng ký không thành công. Vui lòng thử lại.')
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        setError('Tài khoản đã tồn tại. Vui lòng đăng nhập hoặc sử dụng email khác.')
+      } else {
+        setError('Đăng ký không thành công. Vui lòng thử lại.')
+      }
     } finally {
       setIsLoading(false)
     }

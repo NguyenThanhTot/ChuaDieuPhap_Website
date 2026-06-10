@@ -34,27 +34,27 @@ public class UserController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing user")
-    public ResponseEntity<ApiResponse<UserResponse>> update(@PathVariable String id, @Valid @RequestBody UserRequest request) {
+    public ResponseEntity<ApiResponse<UserResponse>> update(@PathVariable("id") String id, @Valid @RequestBody UserRequest request) {
         UserResponse updated = userService.updateUser(id, request);
         return ResponseEntity.ok(ApiResponse.success("User updated successfully", updated));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Soft delete a user")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable String id, @RequestParam String deletedById) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable("id") String id, @RequestParam("deletedById") String deletedById) {
         userService.deleteUser(id, deletedById);
         return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get user by ID")
-    public ResponseEntity<ApiResponse<UserResponse>> findById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<UserResponse>> findById(@PathVariable("id") String id) {
         return ResponseEntity.ok(ApiResponse.success(userService.findById(id)));
     }
 
     @GetMapping("/email/{email}")
     @Operation(summary = "Get user by email")
-    public ResponseEntity<ApiResponse<UserResponse>> findByEmail(@PathVariable String email) {
+    public ResponseEntity<ApiResponse<UserResponse>> findByEmail(@PathVariable("email") String email) {
         return ResponseEntity.ok(ApiResponse.success(userService.findByEmail(email)));
     }
 
@@ -72,7 +72,7 @@ public class UserController {
 
     @GetMapping("/check-email")
     @Operation(summary = "Check if email exists")
-    public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkEmail(@RequestParam String email) {
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkEmail(@RequestParam("email") String email) {
         return ResponseEntity.ok(ApiResponse.success(Map.of("exists", userService.existsByEmail(email))));
     }
 }

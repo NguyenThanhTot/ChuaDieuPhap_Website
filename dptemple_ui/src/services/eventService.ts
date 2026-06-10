@@ -1,6 +1,5 @@
 import { axiosInstance } from '@/lib/axios'
 import type {
-  ApiResponse,
   Event,
   PageEvent,
   Pageable
@@ -16,25 +15,25 @@ export const eventService = {
   // Create a new event
   create: (data: Omit<Event, 'id' | 'createdAt' | 'updatedAt'>) =>
     axiosInstance
-      .post<ApiResponse<Event>>('/events', data)
+      .post<Event>('/events', data)
       .then((r) => r.data),
 
   // Get event by ID
   findById: (id: string) =>
     axiosInstance
-      .get<ApiResponse<Event>>(`/events/${id}`)
+      .get<Event>(`/events/${id}`)
       .then((r) => r.data),
 
   // Update event
   update: (id: string, data: Partial<Event>) =>
     axiosInstance
-      .put<ApiResponse<Event>>(`/events/${id}`, data)
+      .put<Event>(`/events/${id}`, data)
       .then((r) => r.data),
 
   // Soft delete event
   delete: (id: string, deletedById: string) =>
     axiosInstance
-      .delete<ApiResponse<void>>(`/events/${id}`, { params: { deletedById } })
+      .delete<void>(`/events/${id}`, { params: { arg1: deletedById } })
       .then((r) => r.data),
 
   // Get upcoming events

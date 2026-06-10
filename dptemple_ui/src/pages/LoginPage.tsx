@@ -49,23 +49,8 @@ export default function LoginPage() {
 
     try {
       setResendLoading(true)
-      const resp = await authService.resendVerificationEmail(email)
-
-      // authService returns ApiResponse; handle success=false cases
-      if (resp && typeof resp === 'object') {
-        if ((resp as any).success) {
-          setResendMessage('Email xác thực đã được gửi lại. Vui lòng kiểm tra hộp thư đến.')
-        } else {
-          const respMsg = ((resp as any).message || '').toString()
-          if (/already verified|email is already verified|đã.*xác thực/i.test(respMsg)) {
-            setResendMessage('Email của bạn đã được xác thực trước đó.')
-          } else {
-            setError(respMsg || 'Không thể gửi lại email xác thực. Vui lòng thử lại sau.')
-          }
-        }
-      } else {
-        setResendMessage('Email xác thực đã được gửi lại. Vui lòng kiểm tra hộp thư đến.')
-      }
+      await authService.resendVerificationEmail(email)
+      setResendMessage('Email xác thực đã được gửi lại. Vui lòng kiểm tra hộp thư đến.')
     } catch (error) {
       console.error(error)
       // If server returns a 4xx/5xx with a message, handle 'already verified' specifically

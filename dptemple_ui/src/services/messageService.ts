@@ -1,6 +1,5 @@
 import { axiosInstance } from '@/lib/axios'
 import type {
-  ApiResponse,
   Message,
   PageMessage,
   Pageable
@@ -10,13 +9,13 @@ export const messageService = {
   // Create a new message (public)
   create: (data: Omit<Message, 'id' | 'isRead' | 'createdAt' | 'updatedAt'>) =>
     axiosInstance
-      .post<ApiResponse<Message>>('/messages', data)
+      .post<Message>('/messages', data)
       .then((r) => r.data),
 
   // Get message by ID
   findById: (id: string) =>
     axiosInstance
-      .get<ApiResponse<Message>>(`/messages/${id}`)
+      .get<Message>(`/messages/${id}`)
       .then((r) => r.data),
 
   // Delete message
@@ -28,7 +27,7 @@ export const messageService = {
   // Mark message as read
   markAsRead: (id: string) =>
     axiosInstance
-      .put<ApiResponse<Message>>(`/messages/${id}/mark-read`)
+      .put<Message>(`/messages/${id}/mark-read`)
       .then((r) => r.data),
 
   // Get all unread messages

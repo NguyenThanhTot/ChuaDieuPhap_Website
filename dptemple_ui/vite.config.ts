@@ -15,7 +15,10 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        // Keep the /api prefix when proxying so backend controller mappings like
+        // @RequestMapping("/api/...") continue to match. Previously the proxy
+        // removed the /api prefix which caused requests to hit the wrong backend
+        // route and return homepage or time out.
       },
     },
   },

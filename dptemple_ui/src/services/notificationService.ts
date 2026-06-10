@@ -1,6 +1,5 @@
 import { axiosInstance } from '@/lib/axios'
 import type {
-  ApiResponse,
   Notification,
   PageNotification,
   Pageable
@@ -16,25 +15,25 @@ export const notificationService = {
   // Create a new notification
   create: (data: Omit<Notification, 'id' | 'createdAt' | 'updatedAt'>) =>
     axiosInstance
-      .post<ApiResponse<Notification>>('/notifications', data)
+      .post<Notification>('/notifications', data)
       .then((r) => r.data),
 
   // Get notification by ID
   findById: (id: string) =>
     axiosInstance
-      .get<ApiResponse<Notification>>(`/notifications/${id}`)
+      .get<Notification>(`/notifications/${id}`)
       .then((r) => r.data),
 
   // Update notification
   update: (id: string, data: Partial<Notification>) =>
     axiosInstance
-      .put<ApiResponse<Notification>>(`/notifications/${id}`, data)
+      .put<Notification>(`/notifications/${id}`, data)
       .then((r) => r.data),
 
   // Soft delete notification
   delete: (id: string, deletedById: string) =>
     axiosInstance
-      .delete<ApiResponse<void>>(`/notifications/${id}`, { params: { deletedById } })
+      .delete<void>(`/notifications/${id}`, { params: { arg1: deletedById } })
       .then((r) => r.data),
 
   // Get homepage notifications

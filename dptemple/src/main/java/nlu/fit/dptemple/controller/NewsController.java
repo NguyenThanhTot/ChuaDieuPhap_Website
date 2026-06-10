@@ -29,20 +29,20 @@ public class NewsController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing news article")
-    public ResponseEntity<News> update(@PathVariable String id, @RequestBody News news) {
+    public ResponseEntity<News> update(@PathVariable("id") String id, @RequestBody News news) {
         return ResponseEntity.ok(newsService.update(id, news));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Soft delete a news article")
-    public ResponseEntity<Void> delete(@PathVariable String id, @RequestParam String deletedById) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id, @RequestParam("deletedById") String deletedById) {
         newsService.delete(id, deletedById);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get news article by ID")
-    public ResponseEntity<News> findById(@PathVariable String id) {
+    public ResponseEntity<News> findById(@PathVariable("id") String id) {
         return newsService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

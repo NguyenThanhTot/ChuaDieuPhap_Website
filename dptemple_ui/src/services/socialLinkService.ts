@@ -1,5 +1,5 @@
 import { axiosInstance } from '@/lib/axios'
-import type { ApiResponse, SocialLink } from '@/types'
+import type { SocialLink } from '@/types'
 
 export const socialLinkService = {
   // Get all active social links
@@ -11,7 +11,7 @@ export const socialLinkService = {
   // Create a new social link
   create: (data: Omit<SocialLink, 'id' | 'createdAt' | 'updatedAt'>) =>
     axiosInstance
-      .post<ApiResponse<SocialLink>>('/social-links', data)
+      .post<SocialLink>('/social-links', data)
       .then((r) => r.data),
 
   // Get social link by ID

@@ -159,7 +159,7 @@ export default function AdminNotifications() {
         isPublished: newStatus === 'published',
         status: newStatus
       })
-      setNotifications((prev) => prev.map((item) => (item.id === id ? response.data : item)))
+      setNotifications((prev) => prev.map((item) => (item.id === id ? response : item)))
       success(`Đã cập nhật trạng thái thành ${newStatus === 'published' ? 'Đã đăng' : newStatus === 'expired' ? 'Hết hạn' : 'Bản nháp'}`)
     } catch (error) {
       console.error('Failed to update notification status:', error)

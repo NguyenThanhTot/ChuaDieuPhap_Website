@@ -31,20 +31,20 @@ public class EventController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing event")
-    public ResponseEntity<Event> update(@PathVariable String id, @RequestBody Event event) {
+    public ResponseEntity<Event> update(@PathVariable("id") String id, @RequestBody Event event) {
         return ResponseEntity.ok(eventService.update(id, event));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Soft delete an event")
-    public ResponseEntity<Void> delete(@PathVariable String id, @RequestParam String deletedById) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id, @RequestParam("deletedById") String deletedById) {
         eventService.delete(id, deletedById);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get event by ID")
-    public ResponseEntity<Event> findById(@PathVariable String id) {
+    public ResponseEntity<Event> findById(@PathVariable("id") String id) {
         return eventService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
