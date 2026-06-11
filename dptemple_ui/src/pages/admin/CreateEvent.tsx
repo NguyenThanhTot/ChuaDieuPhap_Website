@@ -70,7 +70,9 @@ export default function CreateEvent() {
     setIsLoading(true)
     eventService.findById(id)
       .then((eventData) => {
-        const [startTime, endTime] = eventData.eventTime?.split(' - ') ?? ['08:00', '17:00']
+        const [startTime, endTime] = eventData.eventTime && eventData.eventTime.includes(' - ')
+          ? eventData.eventTime.split(' - ')
+          : [eventData.eventTime ?? '08:00', '17:00']
         setFormData({
           title: eventData.title || '',
           eventType: '',
@@ -174,7 +176,7 @@ export default function CreateEvent() {
           imageUrl: imageUrl || undefined,
           startDate: formData.eventStartDate,
           endDate: formData.eventEndDate,
-          eventTime: `${formData.startTime} - ${formData.endTime}`,
+          eventTime: formData.startTime,
           location: formData.location,
           description: formData.description,
           isFeatured: formData.isPinned,
@@ -188,7 +190,7 @@ export default function CreateEvent() {
           imageUrl: imageUrl || undefined,
           startDate: formData.eventStartDate,
           endDate: formData.eventEndDate,
-          eventTime: `${formData.startTime} - ${formData.endTime}`,
+          eventTime: formData.startTime,
           location: formData.location,
           description: formData.description,
           isFeatured: formData.isPinned,

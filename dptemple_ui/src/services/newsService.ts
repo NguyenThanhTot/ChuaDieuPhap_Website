@@ -1,6 +1,5 @@
 import { axiosInstance } from '@/lib/axios'
 import type {
-  ApiResponse,
   News,
   PageNews,
   Pageable
@@ -14,7 +13,7 @@ export const newsService = {
       .then((r) => r.data),
 
   // Create a new news article
-  create: (data: Omit<News, 'id' | 'createdAt' | 'updatedAt' | 'author'>) =>
+  create: (data: Omit<News, 'id' | 'createdAt' | 'updatedAt'>) =>
     axiosInstance
       .post<News>('/news', data)
       .then((r) => r.data),

@@ -5,12 +5,12 @@ export const authService = {
   login: (data: LoginRequest) =>
     axiosInstance
       .post<ApiResponse<LoginResponse>>('/auth/login', data)
-      .then((r) => r.data),
+      .then((r) => r.data.data),
 
   register: (data: RegisterRequest) =>
     axiosInstance
       .post<ApiResponse<LoginResponse>>('/auth/register', data)
-      .then((r) => r.data),
+      .then((r) => r.data.data),
 
   resendVerificationEmail: (email: string) =>
     axiosInstance

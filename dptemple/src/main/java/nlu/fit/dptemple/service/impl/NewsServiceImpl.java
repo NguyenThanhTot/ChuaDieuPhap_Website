@@ -26,6 +26,11 @@ public class NewsServiceImpl implements NewsService {
 
     @Override
     public News create(News news) {
+        if (news.getAuthor() != null && news.getAuthor().getId() != null) {
+            User author = userRepository.findById(news.getAuthor().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "id", news.getAuthor().getId()));
+            news.setAuthor(author);
+        }
         return newsRepository.save(news);
     }
 
@@ -33,14 +38,32 @@ public class NewsServiceImpl implements NewsService {
     public News update(String id, News news) {
         News existing = newsRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("News", "id", id));
-        existing.setTitle(news.getTitle());
-        existing.setPublishedDate(news.getPublishedDate());
-        existing.setAuthor(news.getAuthor());
-        existing.setThumbnailUrl(news.getThumbnailUrl());
-        existing.setContent(news.getContent());
-        existing.setIsPublished(news.getIsPublished());
-        existing.setIsFeatured(news.getIsFeatured());
-        existing.setHomepagePriority(news.getHomepagePriority());
+        if (news.getTitle() != null) {
+            existing.setTitle(news.getTitle());
+        }
+        if (news.getPublishedDate() != null) {
+            existing.setPublishedDate(news.getPublishedDate());
+        }
+        if (news.getAuthor() != null && news.getAuthor().getId() != null) {
+            User author = userRepository.findById(news.getAuthor().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "id", news.getAuthor().getId()));
+            existing.setAuthor(author);
+        }
+        if (news.getThumbnailUrl() != null) {
+            existing.setThumbnailUrl(news.getThumbnailUrl());
+        }
+        if (news.getContent() != null) {
+            existing.setContent(news.getContent());
+        }
+        if (news.getIsPublished() != null) {
+            existing.setIsPublished(news.getIsPublished());
+        }
+        if (news.getIsFeatured() != null) {
+            existing.setIsFeatured(news.getIsFeatured());
+        }
+        if (news.getHomepagePriority() != null) {
+            existing.setHomepagePriority(news.getHomepagePriority());
+        }
         return newsRepository.save(existing);
     }
 

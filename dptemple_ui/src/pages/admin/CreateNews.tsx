@@ -4,18 +4,24 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import AdminHeader from '@/components/layout/AdminHeader'
 import AdminNavbar from '@/components/layout/AdminNavbar'
 import { useToast } from '@/components/common/Toast'
+import { useAuth } from '@/contexts/AuthContext'
 import { newsService } from '@/services/newsService'
+import type { News } from '@/types'
 
 interface NewsFormData {
   isActive: boolean
+  isFeatured: boolean
   title: string
   newsType: string
   author: string
+  authorId: string
   tags: string
   imageUploadMethod: 'file' | 'url'
   imageUrl: string
   imageFile: File | null
   content: string
+  publishedDate: string
+  homepagePriority: number
 }
 
 export default function CreateNews() {
@@ -25,18 +31,23 @@ export default function CreateNews() {
   useDocumentTitle(isEditMode ? 'Chỉnh sửa tin tức - Admin' : 'Tạo tin tức - Admin')
   const navigate = useNavigate()
   const { success, error } = useToast()
+  const { user } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
 
   const [formData, setFormData] = useState<NewsFormData>({
     isActive: true,
+    isFeatured: false,
     title: '',
     newsType: '',
     author: '',
+    authorId: '',
     tags: '',
     imageUploadMethod: 'file',
     imageUrl: '',
     imageFile: null,
-    content: ''
+    content: '',
+    publishedDate: new Date().toISOString().split('T')[0],
+    homepagePriority: 0
   })
 
   const [errors, setErrors] = useState<Partial<Omit<NewsFormData, 'imageFile'> & { imageFile: string }>>({})
@@ -54,14 +65,18 @@ export default function CreateNews() {
       .then((news) => {
         setFormData({
           isActive: news.isPublished,
+          isFeatured: news.isFeatured,
           title: news.title,
           newsType: '',
           author: news.author?.fullName ?? '',
+          authorId: news.author?.id ?? '',
           tags: '',
           imageUploadMethod: news.thumbnailUrl ? 'url' : 'file',
           imageUrl: news.thumbnailUrl || '',
           imageFile: null,
-          content: news.content
+          content: news.content,
+          publishedDate: news.publishedDate || new Date().toISOString().split('T')[0],
+          homepagePriority: news.homepagePriority ?? 0
         })
       })
       .catch((loadError) => {
@@ -71,6 +86,16 @@ export default function CreateNews() {
       })
       .finally(() => setIsLoading(false))
   }, [id, navigate])
+
+  useEffect(() => {
+    if (!isEditMode && user) {
+      setFormData((prev) => ({
+        ...prev,
+        author: prev.author || user.fullName || '',
+        authorId: prev.authorId || user.id,
+      }))
+    }
+  }, [isEditMode, user])
 
   const handleInputChange = (field: keyof NewsFormData, value: any) => {
     setFormData(prev => ({
@@ -94,6 +119,7 @@ export default function CreateNews() {
     if (!formData.newsType) newErrors.newsType = 'Vui lòng chọn loại tin tức'
     if (!formData.author.trim()) newErrors.author = 'Vui lòng nhập tác giả'
     if (!formData.content.trim()) newErrors.content = 'Vui lòng nhập nội dung tin tức'
+    if (!formData.publishedDate) newErrors.publishedDate = 'Vui lòng chọn ngày xuất bản'
 
     // Image validation
     if (formData.imageUploadMethod === 'url' && !formData.imageUrl.trim()) {
@@ -118,24 +144,33 @@ export default function CreateNews() {
 
     try {
       const thumbnailUrl = formData.imageUploadMethod === 'url' ? formData.imageUrl.trim() : ''
+      const authorPayload = formData.authorId
+        ? { id: formData.authorId }
+        : !isEditMode && user?.id
+          ? { id: user.id }
+          : undefined
+
+      const basePayload: Partial<News> = {
+        title: formData.title,
+        content: formData.content,
+        thumbnailUrl: thumbnailUrl || undefined,
+        isPublished: formData.isActive,
+        isFeatured: formData.isFeatured,
+        publishedDate: formData.publishedDate,
+        homepagePriority: formData.homepagePriority,
+      }
+
+      if (authorPayload) {
+        basePayload.author = authorPayload as any
+      }
+
+      const payload = basePayload as Omit<News, 'id' | 'createdAt' | 'updatedAt'>
+
       if (isEditMode && id) {
-        await newsService.update(id, {
-          title: formData.title,
-          content: formData.content,
-          thumbnailUrl: thumbnailUrl || undefined,
-          isPublished: formData.isActive,
-          isFeatured: false
-        })
+        await newsService.update(id, basePayload)
         success('Tin tức đã được cập nhật thành công')
       } else {
-        await newsService.create({
-          title: formData.title,
-          content: formData.content,
-          thumbnailUrl: thumbnailUrl || undefined,
-          isPublished: formData.isActive,
-          isFeatured: false,
-          publishedDate: new Date().toISOString()
-        })
+        await newsService.create(payload)
         success('Tin tức đã được tạo thành công')
       }
 
